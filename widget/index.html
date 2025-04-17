@@ -1,10 +1,66 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Widget Teste</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Provador Virtual</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    button {
+      padding: 1rem 2rem;
+      font-size: 16px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #resposta {
+      margin-top: 2rem;
+      font-weight: bold;
+      color: green;
+    }
+  </style>
 </head>
 <body>
-  <h1>Seu widget está funcionando!</h1>
+  <div class="container">
+    <h1>Provador Virtual</h1>
+    <button id="testar">Testar Recomendação</button>
+    <div id="resposta"></div>
+  </div>
+
+  <script>
+    $("#testar").on("click", function () {
+      $("#resposta").text("Carregando...");
+
+      $.ajax({
+        url: "https://exclusivedress2025-production.up.railway.app/chat",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+          message: "Quero uma recomendação de vestido",
+        }),
+        success: function (response) {
+          $("#resposta").text(response.reply || "Resposta recebida!");
+        },
+        error: function (err) {
+          $("#resposta").text("Erro ao se conectar com o provador.");
+        },
+      });
+    });
+  </script>
 </body>
 </html>
