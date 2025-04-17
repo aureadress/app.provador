@@ -2,64 +2,68 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Provador Virtual</title>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
       margin: 0;
-      padding: 2rem;
     }
-
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      text-align: center;
-    }
-
     button {
-      padding: 1rem 2rem;
+      padding: 10px 20px;
       font-size: 16px;
-      border: none;
       background-color: #007bff;
       color: white;
-      border-radius: 8px;
+      border: none;
+      border-radius: 5px;
       cursor: pointer;
     }
-
+    button:hover {
+      background-color: #0056b3;
+    }
     #resposta {
-      margin-top: 2rem;
+      margin-top: 20px;
       font-weight: bold;
       color: green;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Provador Virtual</h1>
-    <button id="testar">Testar Recomendação</button>
-    <div id="resposta"></div>
-  </div>
+  <h1>Provador Virtual</h1>
+  <button id="botao">Testar Recomendação</button>
+  <div id="resposta"></div>
 
   <script>
-    $("#testar").on("click", function () {
-      $("#resposta").text("Carregando...");
+    document.getElementById("botao").addEventListener("click", async () => {
+      const respostaEl = document.getElementById("resposta");
 
-      $.ajax({
-        url: "https://exclusivedress2025-production.up.railway.app/chat",
-        method: "POST",
-        contentType: "application/json",
-        data: JSON.stringify({
-          message: "Quero uma recomendação de vestido",
-        }),
-        success: function (response) {
-          $("#resposta").text(response.reply || "Resposta recebida!");
-        },
-        error: function (err) {
-          $("#resposta").text("Erro ao se conectar com o provador.");
-        },
-      });
+      try {
+        const resposta = await fetch("https://appprovador.railway.internal/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            mensagem: "Recomende um look para mim"
+          })
+        });
+
+        if (!resposta.ok) {
+          throw new Error("Erro na resposta do servidor");
+        }
+
+        const dados = await resposta.json();
+        respostaEl.textContent = dados.resposta || "Resposta recebida, mas sem conteúdo.";
+      } catch (erro) {
+        respostaEl.textContent = "Erro ao se conectar com o provador.";
+        respostaEl.style.color = "red";
+        console.error(erro);
+      }
     });
   </script>
 </body>
