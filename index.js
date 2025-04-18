@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import * as cheerio from 'cheerio';
-import fetch from 'node-fetch';
+import puppeteer from 'puppeteer';
 import { config } from 'dotenv';
 import { OpenAI } from 'openai';
 
@@ -15,10 +15,14 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 app.post('/api/ia', async (req, res) => {
   try {
     const { busto, cintura, quadril, url, message } = req.body;
-    const response = await fetch(url);
-    const html = await response.text();
-    const $ = cheerio.load(html);
 
+    const browser = await puppeteer.launch({ headless: 'new' });
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: 'networkidle2' });
+    const html = await page.content();
+    await browser.close();
+
+    const $ = cheerio.load(html);
     const nome = $('h1').text().trim();
     const descricao = $('#product-description').text().trim();
     const caracteristicas = $('.product-features').text().trim();
@@ -33,7 +37,6 @@ HTML bruto da página: ${html}
     let prompt = '';
 
     if (!message && busto && cintura && quadril) {
-      // Prompt 1: retorna apenas o número (36 a 58)
       prompt = `
 Você é um especialista em moda da loja Exclusive Dress. Com base nas medidas a seguir e nas informações da página, responda apenas com o número do tamanho ideal (36 a 58), sem explicações:
 
@@ -45,7 +48,6 @@ Produto:
 ${contextoHTML}
       `.trim();
     } else {
-      // Prompt 2: mensagem complementar com saudação, nome em negrito e ajuda
       prompt = `
 🧠 INSTRUÇÕES PARA A I.A - ASSISTENTE VIRTUAL EXCLUSIVE DRESS
 
