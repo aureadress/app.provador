@@ -49,7 +49,7 @@
         popup.style.display = "none";
         popup.style.boxShadow = "0 2px 12px rgba(0,0,0,0.5)";
         popup.innerHTML = `
-          <iframe src="https://app.provadorinteligente.com.br" width="100%" height="100%" frameborder="0" style="border:none;"></iframe>
+          <iframe id="provador-iframe" src="https://app.provadorinteligente.com.br" width="100%" height="100%" frameborder="0" style="border:none;"></iframe>
           <button id="fechar-provador" style="position:absolute;top:-12px;right:-12px;background:#000;color:#fff;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-weight:bold;">&times;</button>
         `;
 
@@ -68,9 +68,8 @@
           }
         });
       }
-    }, 300); // verifica a cada 300ms
+    }, 300);
 
-    // Para evitar loops infinitos, para após 15 segundos
     setTimeout(() => clearInterval(checkInterval), 15000);
   });
 })();
