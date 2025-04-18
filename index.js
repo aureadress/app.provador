@@ -1,11 +1,10 @@
+// ✅ BACKEND CORRIGIDO COM PUPPETEER + CATCH ROBUSTO
 import express from 'express';
 import cors from 'cors';
 import * as cheerio from 'cheerio';
 import puppeteer from 'puppeteer';
 import { config } from 'dotenv';
 import { OpenAI } from 'openai';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 config();
 const app = express();
@@ -15,12 +14,10 @@ app.use(express.json());
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 app.post('/api/ia', async (req, res) => {
-  const { busto, cintura, quadril, url, message } = req.body;
-
-  let browser;
-
   try {
-    browser = await puppeteer.launch({ headless: 'new' });
+    const { busto, cintura, quadril, url, message } = req.body;
+
+    const browser = await puppeteer.launch({ headless: 'new' });
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'networkidle2' });
     const html = await page.content();
@@ -35,10 +32,13 @@ app.post('/api/ia', async (req, res) => {
 Nome do Produto: ${nome}
 Descrição: ${descricao}
 Características: ${caracteristicas}
+HTML bruto da página: ${html}
 `.replace(/\s+/g, ' ').trim();
 
-    const prompt = !message && busto && cintura && quadril
-      ? `
+    let prompt = '';
+
+    if (!message && busto && cintura && quadril) {
+      prompt = `
 Você é um especialista em moda da loja Exclusive Dress. Com base nas medidas a seguir e nas informações da página, responda apenas com o número do tamanho ideal (36 a 58), sem explicações:
 
 Busto: ${busto} cm
@@ -47,8 +47,9 @@ Quadril: ${quadril} cm
 
 Produto:
 ${contextoHTML}
-      `.trim()
-      : `
+      `.trim();
+    } else {
+      prompt = `
 🧠 INSTRUÇÕES PARA A I.A - ASSISTENTE VIRTUAL EXCLUSIVE DRESS
 
 Você é um especialista em moda da loja Exclusive Dress. Seu papel é ajudar o cliente com base nas medidas e na página do produto.
@@ -59,6 +60,7 @@ ${message || `Minhas medidas são busto ${busto}, cintura ${cintura}, quadril ${
 📄 Produto:
 ${contextoHTML}
       `.trim();
+    }
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4',
@@ -66,19 +68,15 @@ ${contextoHTML}
       temperature: 0.6,
     });
 
-    return res.json(completion);
-
+    res.json(completion);
   } catch (err) {
-    console.error('Erro interno:', err);
-    return res.status(500).json({
-      erro: 'Erro ao processar requisição.',
-      detalhes: err.message || err.toString(),
-    });
-  } finally {
-    if (browser) await browser.close().catch(() => {});
+    console.error('[ERRO BACKEND]', err);
+    res.status(500).json({ erro: 'Erro interno no servidor.', detalhes: err.message });
   }
 });
 
+import path from 'path';
+import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
