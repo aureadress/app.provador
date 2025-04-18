@@ -1,4 +1,3 @@
-// WIDGET PROVADOR INTELIGENTE - VERSÃO SaaS PARA OUTRAS LOJAS
 (function () {
   document.addEventListener("DOMContentLoaded", function () {
     const checkInterval = setInterval(() => {
@@ -65,6 +64,13 @@
           if (e.target.id === "fechar-provador" || e.target.id === "overlay-provador") {
             popup.style.display = "none";
             overlay.style.display = "none";
+          }
+        });
+
+        // ✅ Comunicação segura com o iframe (validação futura se necessário)
+        window.addEventListener("message", (event) => {
+          if (typeof event.data === "string" && event.data.includes("provador-error")) {
+            alert("Houve um erro ao carregar o provador. Tente novamente.");
           }
         });
       }
