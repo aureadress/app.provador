@@ -14,7 +14,7 @@
   </style>
 </head>
 <body>
-  <!-- INSERE AQUI O WIDGET DIRETAMENTE -->
+  <!-- WIDGET -->
   <div style="width: 380px; height: 570px; background-color: #f2f2f2; border-radius: 8px; overflow: hidden; font-family: Montserrat, sans-serif; display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(0,0,0,0.16); margin: auto;">
     <div style="background-color: #000; text-align: center; padding: 12px;">
       <img src="https://cdn.dooca.store/161300/files/inteligente-1-1.png?v=1744597262" alt="logo" style="height: 69px; width: 196px;" />
@@ -108,22 +108,23 @@
         });
 
         const data = await resposta1.json();
-        const tamanho = data.resposta;
+        const tamanho = data.choices?.[0]?.message?.content?.trim();
 
         atualizarTarja(`<div style="font-size: 11px;">COM BASE NAS MEDIDAS ABAIXO, O TAMANHO IDEAL É O:<br><span style="font-size: 24px; font-weight: bold;">${tamanho}</span></div>`);
 
-        const resposta2 = await fetch('https://exclusivedress2025-production.up.railway.app/chat', {
+        const resposta2 = await fetch('https://app.provadorinteligente.com.br/api/ia', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ busto, cintura, quadril, url, message: "Qual o tamanho ideal?" })
         });
 
         const data2 = await resposta2.json();
-        const respostaTexto = data2?.choices?.[0]?.message?.content?.trim() || 'Desculpe, não foi possível obter a resposta.';
+        const respostaTexto = data2.choices?.[0]?.message?.content?.trim() || 'Desculpe, não foi possível obter a resposta.';
         adicionarMensagemIA(respostaTexto);
 
       } catch (error) {
         console.error('Erro ao enviar as medidas:', error);
+        atualizarTarja("Erro ao calcular tamanho.");
       }
     }
 
@@ -138,14 +139,14 @@
       input.value = "";
 
       try {
-        const response = await fetch('https://exclusivedress2025-production.up.railway.app/chat', {
+        const response = await fetch('https://app.provadorinteligente.com.br/api/ia', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url, message: pergunta })
         });
 
         const data = await response.json();
-        const respostaTexto = data?.choices?.[0]?.message?.content?.trim() || 'Desculpe, não foi possível obter a resposta.';
+        const respostaTexto = data.choices?.[0]?.message?.content?.trim() || 'Desculpe, não foi possível obter a resposta.';
         adicionarMensagemIA(respostaTexto);
       } catch (error) {
         console.error('Erro ao enviar pergunta:', error);
