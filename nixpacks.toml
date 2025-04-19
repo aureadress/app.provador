@@ -8,7 +8,6 @@ nixPkgs = [
   "cups",
   "libdrm",
   "libgbm",
-  "libgconf",
   "libglu",
   "gtk3",
   "libuuid",
