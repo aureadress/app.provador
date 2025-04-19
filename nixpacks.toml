@@ -19,3 +19,4 @@ nixPkgs = [
   "libxss"
   "libxtst"
 ]
+
