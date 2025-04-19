@@ -6,7 +6,7 @@ nixPkgs = [
   "libatk-bridge2.0",
   "libcups2",
   "libgbm1",
-  "libasound2",
+  "alsa-lib",
   "libpangocairo-1.0",
   "libxss1",
   "libgtk-3.0",
