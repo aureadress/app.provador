@@ -1,22 +1,21 @@
 [phases.setup]
 nixPkgs = [
-  "nodejs_18"
-  "nss"
-  "alsa-lib"
-  "atk"
-  "atkmm"
-  "cups"
-  "libdrm"
-  "libgbm"
-  "libgconf"
-  "libglu"
-  "gtk3"
-  "libuuid"
-  "libxcomposite"
-  "libxdamage"
-  "libxrandr"
-  "libxshmfence"
-  "libxss"
+  "nodejs_18",
+  "nss",
+  "alsa-lib",
+  "atk",
+  "atkmm",
+  "cups",
+  "libdrm",
+  "libgbm",
+  "libgconf",
+  "libglu",
+  "gtk3",
+  "libuuid",
+  "libxcomposite",
+  "libxdamage",
+  "libxrandr",
+  "libxshmfence",
+  "libxss",
   "libxtst"
 ]
-
