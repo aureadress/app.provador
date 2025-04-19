@@ -1,24 +1,21 @@
-{ pkgs ? import <nixpkgs> {} }:
-
-pkgs.mkShell {
-  buildInputs = [
-    pkgs.nodejs_18
-    pkgs.nss
-    pkgs.libasound
-    pkgs.libatk
-    pkgs.libatk_gtk3
-    pkgs.libcups
-    pkgs.libdrm
-    pkgs.libgbm
-    pkgs.libgconf
-    pkgs.libglu
-    pkgs.libgtk3
-    pkgs.libuuid
-    pkgs.libxcomposite
-    pkgs.libxdamage
-    pkgs.libxrandr
-    pkgs.libxshmfence
-    pkgs.libxss
-    pkgs.libxtst
-  ];
-}
+[phases.setup]
+nixPkgs = [
+  "nodejs_18"
+  "nss"
+  "alsa-lib"
+  "atk"
+  "atkmm"
+  "cups"
+  "libdrm"
+  "libgbm"
+  "libgconf"
+  "libglu"
+  "gtk3"
+  "libuuid"
+  "libxcomposite"
+  "libxdamage"
+  "libxrandr"
+  "libxshmfence"
+  "libxss"
+  "libxtst"
+]
