@@ -1,10 +1,5 @@
 [phases.setup]
-nixPkgs = [
-  "nodejs_18",
-  "yarn",
-  "openssl",
-  "git"
-]
+nixPkgs = ["nodejs_18", "yarn", "openssl", "git"]
 
 [phases.build]
 cmds = ["yarn install", "yarn build"]
