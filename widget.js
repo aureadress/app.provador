@@ -1,1 +1,0 @@
-// Aqui você pode colar seu script atual de injeção do widget, sem alterações.
