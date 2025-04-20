@@ -1,0 +1,20 @@
+[phases.setup]
+nixPkgs = [
+  "nodejs_18",
+  "nss",
+  "alsa-lib",
+  "atk",
+  "atkmm",
+  "cups",
+  "libdrm",
+  "libgbm",
+  "libGLU",
+  "gtk3",
+  "libuuid",
+  "xorg.libXcomposite",
+  "xorg.libXdamage",
+  "xorg.libXrandr",
+  "xorg.libXshmfence",
+  "xorg.libXss",
+  "xorg.libXtst"
+]
