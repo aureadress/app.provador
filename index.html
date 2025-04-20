@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Provador Inteligente</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Montserrat, sans-serif;
+      background-color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- WIDGET EMBUTIDO NO SITE -->
+  <div style="width: 380px; height: 570px; background-color: #f2f2f2; border-radius: 8px; overflow: hidden; font-family: Montserrat, sans-serif; display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(0,0,0,0.16); margin: auto;">
+    <!-- TOPO COM LOGO -->
+    <div style="background-color: #000; text-align: center; padding: 12px;">
+      <img src="https://cdn.dooca.store/161300/files/inteligente-1-1.png?v=1744597262" alt="logo" style="height: 69px; width: 196px;" />
+    </div>
+
+    <!-- ÁREA DE MENSAGENS -->
+    <div id="areaMensagens" style="flex: 1; padding: 8px; font-size: 13px; overflow-y: auto;"></div>
+
+    <!-- FAIXA PRETA DE RESPOSTA -->
+    <div id="respostaIA" style="background-color: #000; color: #fff; text-align: center; font-size: 12px; font-weight: bold; white-space: normal; overflow: hidden; padding: 6px 8px;">
+      INSIRA SUAS MEDIDAS E DESCUBRA O TAMANHO IDEAL
+    </div>
+
+    <!-- INPUTS DE MEDIDAS -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 5px 8px; gap: 5px;">
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <div style="width: 87px; height: 20px; background-color: #000; color: #fff; font-size: 10px; font-weight: bold; border-radius: 8px 8px 0 0; display: flex; align-items: center; justify-content: center;">BUSTO</div>
+        <input id="busto" type="number" placeholder="busto (cm)" style="width: 87px; height: 36px; text-align: center; font-size: 12px; border: 1px solid #000; border-top: none; border-radius: 0 0 8px 8px;">
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <div style="width: 87px; height: 20px; background-color: #000; color: #fff; font-size: 10px; font-weight: bold; border-radius: 8px 8px 0 0; display: flex; align-items: center; justify-content: center;">CINTURA</div>
+        <input id="cintura" type="number" placeholder="cintura (cm)" style="width: 87px; height: 36px; text-align: center; font-size: 12px; border: 1px solid #000; border-top: none; border-radius: 0 0 8px 8px;">
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <div style="width: 87px; height: 20px; background-color: #000; color: #fff; font-size: 10px; font-weight: bold; border-radius: 8px 8px 0 0; display: flex; align-items: center; justify-content: center;">QUADRIL</div>
+        <input id="quadril" type="number" placeholder="quadril (cm)" style="width: 87px; height: 36px; text-align: center; font-size: 12px; border: 1px solid #000; border-top: none; border-radius: 0 0 8px 8px;">
+      </div>
+      <div style="display: flex; align-items: center; height: 56px;">
+        <button onclick="enviarMedidas()" style="width: 87px; height: 56px; background-color: #000; color: #fff; font-size: 11px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">ENVIAR<br>MEDIDAS</button>
+      </div>
+    </div>
+
+    <!-- CAMPO DE PERGUNTA -->
+    <div style="display: flex; padding: 6px 12px;">
+      <input id="inputPergunta" type="text" placeholder="Digite sua dúvida..." style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+      <button onclick="enviarPergunta()" style="width: 44px; height: 44px; background-color: #000; color: white; font-size: 18px; border-radius: 8px; border: none; margin-left: 8px;">➤</button>
+    </div>
+
+    <!-- RODAPÉ -->
+    <div style="background-color: #000; color: white; font-size: 10px; text-align: center; padding: 6px; font-weight: bold;">
+      TECNOLOGIA PROVADOR INTELIGENTE
+    </div>
+  </div>
+
+  <script src="widget.js"></script> <!-- ou cole o script completo aqui se não for usar o widget.js externo -->
+
+</body>
+</html>
