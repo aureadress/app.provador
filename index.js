@@ -12,17 +12,20 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Caminho para a raiz do projeto (agora é o próprio __dirname)
+// ✅ Caminhos corretos
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname);
 
-// Servir index.html na rota /
+// ✅ Permitir servir arquivos da raiz (como widget.js e index.html)
+app.use(express.static(rootDir));
+
+// ✅ Rota GET para carregar index.html
 app.get('/', (req, res) => {
   res.sendFile(path.join(rootDir, 'index.html'));
 });
 
-// Rota POST /chat
+// ✅ Rota POST principal
 app.post('/chat', async (req, res) => {
   try {
     const { busto, cintura, quadril, url, message } = req.body;
@@ -32,6 +35,7 @@ app.post('/chat', async (req, res) => {
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+    // Se for uma pergunta do cliente (message)
     if (message) {
       const prompt = `Você é um vendedor especialista. Com base na página do produto a seguir:\n${textoPagina}\n\nResponda de forma simpática e objetiva a dúvida: "${message}"`;
       const resposta = await openai.chat.completions.create({
@@ -42,17 +46,20 @@ app.post('/chat', async (req, res) => {
         ]
       });
       return res.json({ resposta: resposta.choices[0].message.content });
-    } else {
-      const prompt = `Com base nas medidas busto ${busto}, cintura ${cintura}, quadril ${quadril}, e no conteúdo da página:\n${textoPagina}\n\nInforme apenas o número do tamanho ideal entre 36 e 58. Nada mais.`;
-      const resposta = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          { role: 'system', content: 'Responda apenas com o número do tamanho entre 36 e 58.' },
-          { role: 'user', content: prompt }
-        ]
-      });
-      return res.json({ resposta: resposta.choices[0].message.content });
     }
+
+    // Se for um cálculo de tamanho
+    const prompt = `Com base nas medidas busto ${busto}, cintura ${cintura}, quadril ${quadril}, e no conteúdo da página:\n${textoPagina}\n\nInforme apenas o número do tamanho ideal entre 36 e 58. Nada mais.`;
+    const resposta = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        { role: 'system', content: 'Responda apenas com o número do tamanho entre 36 e 58.' },
+        { role: 'user', content: prompt }
+      ]
+    });
+
+    return res.json({ resposta: resposta.choices[0].message.content });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ erro: 'Erro ao processar a requisição' });
@@ -62,4 +69,4 @@ app.post('/chat', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
-}); 
+});
