@@ -1,4 +1,3 @@
-
 (function () {
   function iniciarWidget() {
     if (document.getElementById("btn-provador")) return;
@@ -12,10 +11,7 @@
       console.warn("Erro ao obter nome da loja:", e.message);
     }
 
-    const botao = document.createElement("button");
-    botao.id = "btn-provador";
-    botao.innerText = "DESCUBRA SEU TAMANHO";
-    Object.assign(botao.style, {
+    const botao = $('<button id="btn-provador">DESCUBRA SEU TAMANHO</button>').css({
       backgroundColor: "#000",
       color: "#fff",
       padding: "12px 20px",
@@ -27,16 +23,14 @@
       marginTop: "12px"
     });
 
-    const target = document.querySelector(".page--product .product-info-content .product-action");
-    if (target) {
-      target.parentNode.insertBefore(botao, target);
+    const target = $(".page--product .product-info-content .product-action");
+    if (target.length) {
+      target.before(botao);
     } else {
-      document.body.appendChild(botao);
+      $("body").append(botao);
     }
 
-    const overlay = document.createElement("div");
-    overlay.id = "overlay-fundo";
-    Object.assign(overlay.style, {
+    const overlay = $('<div id="overlay-fundo"></div>').css({
       display: "none",
       position: "fixed",
       top: 0,
@@ -46,11 +40,8 @@
       backgroundColor: "rgba(0,0,0,0.6)",
       zIndex: 9998
     });
-    document.body.appendChild(overlay);
 
-    const popup = document.createElement("div");
-    popup.id = "provador-popup";
-    Object.assign(popup.style, {
+    const popup = $('<div id="provador-popup"></div>').css({
       display: "none",
       position: "fixed",
       top: "50%",
@@ -65,9 +56,7 @@
       boxShadow: "0 2px 10px rgba(0,0,0,0.3)"
     });
 
-    const btnFechar = document.createElement("button");
-    btnFechar.innerHTML = "✕";
-    Object.assign(btnFechar.style, {
+    const btnFechar = $('<button>✕</button>').css({
       position: "absolute",
       top: "-12px",
       right: "-12px",
@@ -81,37 +70,35 @@
       cursor: "pointer",
       zIndex: 10000
     });
-    popup.appendChild(btnFechar);
 
-    const iframe = document.createElement("iframe");
-    iframe.src = "https://app.provadorinteligente.com.br/index.html";
-    Object.assign(iframe.style, {
+    const iframe = $('<iframe></iframe>').attr("src", "https://app.provadorinteligente.com.br/index.html").css({
       width: "100%",
       height: "100%",
       border: "none"
     });
-    popup.appendChild(iframe);
 
-    document.body.appendChild(popup);
+    popup.append(btnFechar).append(iframe);
 
-    botao.addEventListener("click", function () {
-      popup.style.display = "block";
-      overlay.style.display = "block";
+    $("body").append(overlay).append(popup);
+
+    botao.on("click", function () {
+      popup.show();
+      overlay.show();
     });
 
-    btnFechar.addEventListener("click", function () {
-      popup.style.display = "none";
-      overlay.style.display = "none";
+    btnFechar.on("click", function () {
+      popup.hide();
+      overlay.hide();
     });
 
-    overlay.addEventListener("click", function () {
-      popup.style.display = "none";
-      overlay.style.display = "none";
+    overlay.on("click", function () {
+      popup.hide();
+      overlay.hide();
     });
 
     window.nomeLoja = nomeLoja;
   }
 
-  document.addEventListener("DOMContentLoaded", iniciarWidget);
+  $(document).ready(iniciarWidget);
   setInterval(iniciarWidget, 2000);
 })();
