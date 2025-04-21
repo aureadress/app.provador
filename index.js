@@ -27,9 +27,9 @@ app.post('/chat', async (req, res) => {
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
 
-    // 🧠 Extrações estruturadas com base nas classes da Bagy
-    const nomeProduto = $('h1').first().text().trim();
-    const descricao = $('.product-description, #product-description').text().trim();
+    // NOVOS SELETORES COMPATÍVEIS COM BAGY
+    const nomeProduto = $('.page--product h1, h1.titulo, .product-info-content h1').first().text().trim();
+    const descricao = $('#product-description, .product-description, .descricao-produto').text().trim();
 
     let tabelaMedidas = '';
     $('table').each((i, tabela) => {
@@ -39,7 +39,7 @@ app.post('/chat', async (req, res) => {
       }
     });
 
-    const cores = $('.product-variants .variant-color').text().trim();
+    const cores = $('.variant-color, .option-color, .product-variants').text().trim();
 
     console.log("🛠️ Dados extraídos:\n", {
       nomeProduto,
@@ -51,7 +51,7 @@ app.post('/chat', async (req, res) => {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     if (message) {
-      const prompt = `Você é um vendedor especialista da loja Exclusive Dress.\n\nCom base nas informações abaixo:\n\n⭐ Nome do produto: ${nomeProduto}\n📃 Descrição: ${descricao}\n📏 Tabela de medidas:\n${tabelaMedidas}\n🎨 Cores disponíveis: ${cores}\n\nResponda à seguinte pergunta da cliente:\n"${message}"\n\nSe for dúvida sobre tamanho, informe que ela já inseriu as medidas.\nSe for dúvida sobre entrega, oriente a inserir o CEP na página do produto.\nSe for dúvida sobre troca, devolução ou contato, envie os links: /trocas /contato.`;
+      const prompt = `Você é um vendedor especialista da loja Exclusive Dress.\n\nCom base nas informações abaixo:\n\n⭐ Nome do produto: ${nomeProduto}\n📜 Descrição: ${descricao}\n📏 Tabela de medidas:\n${tabelaMedidas}\n🎨 Cores disponíveis: ${cores}\n\nResponda à seguinte pergunta da cliente:\n"${message}"\n\nSe for dúvida sobre tamanho, informe que ela já inseriu as medidas.\nSe for dúvida sobre entrega, oriente a inserir o CEP na página do produto.\nSe for dúvida sobre troca, devolução ou contato, envie os links: /trocas /contato.`;
 
       const resposta = await openai.chat.completions.create({
         model: 'gpt-4',
@@ -64,7 +64,7 @@ app.post('/chat', async (req, res) => {
       return res.json({ resposta: resposta.choices[0].message.content });
     }
 
-    const prompt = `Com base nas medidas da cliente:\n- Busto: ${busto} cm\n- Cintura: ${cintura} cm\n- Quadril: ${quadril} cm\n\nE nas informações da página do produto abaixo:\n\n⭐ Nome do produto: ${nomeProduto}\n📃 Descrição: ${descricao}\n📏 Tabela de medidas:\n${tabelaMedidas}\n🎨 Cores disponíveis: ${cores}\n\nResponda apenas com o número do tamanho ideal entre 36 e 58. Sem nenhum outro texto.`;
+    const prompt = `Com base nas medidas da cliente:\n- Busto: ${busto} cm\n- Cintura: ${cintura} cm\n- Quadril: ${quadril} cm\n\nE nas informações da página do produto abaixo:\n\n⭐ Nome do produto: ${nomeProduto}\n📜 Descrição: ${descricao}\n📏 Tabela de medidas:\n${tabelaMedidas}\n🎨 Cores disponíveis: ${cores}\n\nResponda apenas com o número do tamanho ideal entre 36 e 58. Sem nenhum outro texto.`;
 
     const resposta = await openai.chat.completions.create({
       model: 'gpt-4',
