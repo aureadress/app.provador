@@ -1,110 +1,121 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Provador Inteligente</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 20px;
-      font-family: Montserrat, sans-serif;
-      background-color: #fff;
-    }
-  </style>
-</head>
-<body>
-  <div style="width: 380px; height: 570px; background-color: #f2f2f2; border-radius: 8px; overflow: hidden; font-family: Montserrat, sans-serif; display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(0,0,0,0.16); margin: auto;">
-    <div style="background-color: #000; text-align: center; padding: 12px;">
-      <img src="https://cdn.dooca.store/161300/files/inteligente-1-1.png?v=1744597262" alt="logo" style="height: 69px; width: 196px;" />
-    </div>
-    <div id="areaMensagens" style="flex: 1; padding: 8px; font-size: 13px; overflow-y: auto;"></div>
-    <div id="respostaIA" style="background-color: #000; color: #fff; text-align: center; font-size: 12px; font-weight: bold; white-space: normal; overflow: hidden; padding: 6px 8px;">
-      INSIRA SUAS MEDIDAS E DESCUBRA O TAMANHO IDEAL
-    </div>
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 5px 8px; gap: 5px;">
-      <div style="display: flex; flex-direction: column; align-items: center;">
-        <div style="width: 87px;" class="label">BUSTO</div>
-        <input id="busto" type="number" placeholder="busto (cm)" style="width: 87px; height: 36px; text-align: center;">
-      </div>
-      <div style="display: flex; flex-direction: column; align-items: center;">
-        <div style="width: 87px;" class="label">CINTURA</div>
-        <input id="cintura" type="number" placeholder="cintura (cm)" style="width: 87px; height: 36px; text-align: center;">
-      </div>
-      <div style="display: flex; flex-direction: column; align-items: center;">
-        <div style="width: 87px;" class="label">QUADRIL</div>
-        <input id="quadril" type="number" placeholder="quadril (cm)" style="width: 87px; height: 36px; text-align: center;">
-      </div>
-      <div style="display: flex; align-items: center; height: 56px;">
-        <button onclick="enviarMedidas()" style="width: 87px; height: 56px;">ENVIAR<br>MEDIDAS</button>
-      </div>
-    </div>
-    <div style="display: flex; padding: 6px 12px;">
-      <input id="inputPergunta" type="text" placeholder="Digite sua dúvida..." style="flex: 1;">
-      <button onclick="enviarPergunta()" style="width: 44px;">➤</button>
-    </div>
-    <div style="background-color: #000; color: white; font-size: 10px; text-align: center; padding: 6px; font-weight: bold;">
-      TECNOLOGIA PROVADOR INTELIGENTE
-    </div>
-  </div>
-
-  <script>
-    function adicionarMensagemIA(msg) {
-      const div = document.createElement("div");
-      div.style.background = "#333";
-      div.style.color = "#fff";
-      div.style.padding = "8px";
-      div.style.borderRadius = "8px";
-      div.style.marginBottom = "6px";
-      div.innerText = msg;
-      document.getElementById("areaMensagens").appendChild(div);
-    }
-
-    function adicionarMensagemCliente(msg) {
-      const div = document.createElement("div");
-      div.style.background = "#eaeaea";
-      div.style.color = "#000";
-      div.style.padding = "8px";
-      div.style.borderRadius = "8px";
-      div.style.marginBottom = "6px";
-      div.innerText = msg;
-      document.getElementById("areaMensagens").appendChild(div);
-    }
-
-    async function enviarMedidas() {
-      const busto = document.getElementById("busto").value;
-      const cintura = document.getElementById("cintura").value;
-      const quadril = document.getElementById("quadril").value;
-      adicionarMensagemCliente(`Minhas medidas são: Busto ${busto} cm, Cintura ${cintura} cm, Quadril ${quadril} cm`);
-      document.getElementById("respostaIA").innerText = "CARREGANDO TAMANHO IDEAL...";
-      try {
-        const res = await fetch("/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ busto, cintura, quadril, url: window.location.href })
-        });
-        const data = await res.json();
-        document.getElementById("respostaIA").innerHTML = `<div style="font-size: 11px;">COM BASE NAS MEDIDAS ABAIXO, O TAMANHO IDEAL É O:<br><span style="font-size: 24px; font-weight: bold;">${data.resposta}</span></div>`;
-      } catch {
-        document.getElementById("respostaIA").innerText = "ERRO AO CONSULTAR TAMANHO";
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Provador Inteligente</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+        margin: 0;
+        padding: 0;
       }
-    }
-
-    async function enviarPergunta() {
-      const pergunta = document.getElementById("inputPergunta").value;
-      adicionarMensagemCliente(pergunta);
-      try {
-        const res = await fetch("/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: pergunta, url: window.location.href })
-        });
-        const data = await res.json();
-        adicionarMensagemIA(data.resposta);
-      } catch {
-        adicionarMensagemIA("Erro ao buscar resposta.");
+      .widget-container {
+        max-width: 400px;
+        margin: 40px auto;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
       }
-    }
-  </script>
-</body>
+      .widget-header {
+        background-color: #000;
+        color: #fff;
+        padding: 16px;
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+      }
+      .widget-body {
+        padding: 20px;
+      }
+      .input-group {
+        margin-bottom: 15px;
+      }
+      .input-group label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      .input-group input {
+        width: 100%;
+        padding: 10px;
+        box-sizing: border-box;
+      }
+      .input-group button {
+        width: 100%;
+        padding: 10px;
+        background-color: #000;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        margin-top: 10px;
+      }
+      .resposta-container {
+        background: #eee;
+        margin-top: 20px;
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="widget-container">
+      <div class="widget-header">PROVADOR INTELIGENTE</div>
+      <div class="widget-body">
+        <div class="input-group">
+          <label for="busto">Busto (cm)</label>
+          <input type="number" id="busto" placeholder="Ex: 90" />
+        </div>
+        <div class="input-group">
+          <label for="cintura">Cintura (cm)</label>
+          <input type="number" id="cintura" placeholder="Ex: 70" />
+        </div>
+        <div class="input-group">
+          <label for="quadril">Quadril (cm)</label>
+          <input type="number" id="quadril" placeholder="Ex: 100" />
+        </div>
+        <div class="input-group">
+          <button onclick="enviarMedidas()">Enviar Medidas</button>
+        </div>
+        <div class="resposta-container" id="resposta"></div>
+      </div>
+    </div>
+
+    <script>
+      async function enviarMedidas() {
+        const busto = document.getElementById('busto').value;
+        const cintura = document.getElementById('cintura').value;
+        const quadril = document.getElementById('quadril').value;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const lojaUrl = urlParams.get("url") || "";
+
+        const respostaDiv = document.getElementById('resposta');
+        respostaDiv.innerHTML = 'Calculando...';
+
+        try {
+          const resposta = await fetch('https://app.provadorinteligente.com.br/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              busto: busto,
+              cintura: cintura,
+              quadril: quadril,
+              url: lojaUrl,
+              message: ""
+            })
+          });
+
+          const dados = await resposta.json();
+          respostaDiv.innerHTML = `<strong>Tamanho Ideal:</strong> ${dados.resposta}`;
+        } catch (erro) {
+          respostaDiv.innerHTML = 'Erro ao obter resposta. Tente novamente mais tarde.';
+        }
+      }
+    </script>
+  </body>
 </html>
