@@ -12,32 +12,47 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ Caminhos corretos
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname);
-
-// ✅ Permitir servir arquivos da raiz (como widget.js e index.html)
 app.use(express.static(rootDir));
 
-// ✅ Rota GET para carregar index.html
 app.get('/', (req, res) => {
   res.sendFile(path.join(rootDir, 'index.html'));
 });
 
-// ✅ Rota POST principal
 app.post('/chat', async (req, res) => {
   try {
     const { busto, cintura, quadril, url, message } = req.body;
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
-    const textoPagina = $('body').text();
+
+    // 🔍 Extrações inteligentes
+    const nomeProduto = $('h1').first().text().trim();
+    const descricao = $('.product-description').text().trim();
+
+    let tabelaMedidas = '';
+    $('table').each((i, tabela) => {
+      const textoTabela = $(tabela).text().toLowerCase();
+      if (textoTabela.includes('busto') && textoTabela.includes('cintura')) {
+        tabelaMedidas = $(tabela).text().trim();
+      }
+    });
+
+    const cores = $('.product-variants .variant-color').text().trim();
+
+    console.log("🛠️ Dados extraídos:\n", {
+      nomeProduto,
+      descricao,
+      tabelaMedidas,
+      cores
+    });
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    // Se for uma pergunta do cliente (message)
     if (message) {
-      const prompt = `Você é um vendedor especialista. Com base na página do produto a seguir:\n${textoPagina}\n\nResponda de forma simpática e objetiva a dúvida: "${message}"`;
+      const prompt = `Você é um vendedor especialista em moda festa.\n\n🛍️ Produto: ${nomeProduto}\n\n📝 Descrição:\n${descricao}\n\n📏 Tabela de Medidas:\n${tabelaMedidas}\n\n🎨 Cores disponíveis:\n${cores}\n\nA cliente perguntou:\n\"${message}\"\n\nResponda de forma simpática, objetiva e com base nessas informações.`;
+
       const resposta = await openai.chat.completions.create({
         model: 'gpt-4',
         messages: [
@@ -48,8 +63,8 @@ app.post('/chat', async (req, res) => {
       return res.json({ resposta: resposta.choices[0].message.content });
     }
 
-    // Se for um cálculo de tamanho
-    const prompt = `Com base nas medidas busto ${busto}, cintura ${cintura}, quadril ${quadril}, e no conteúdo da página:\n${textoPagina}\n\nInforme apenas o número do tamanho ideal entre 36 e 58. Nada mais.`;
+    const prompt = `Você é um vendedor especialista em vestidos de festa.\n\nCom base nas informações do produto abaixo:\n\n🛍️ Nome: ${nomeProduto}\n\n📝 Descrição:\n${descricao}\n\n📏 Tabela de Medidas:\n${tabelaMedidas}\n\n🎨 Cores disponíveis:\n${cores}\n\nCom base nas medidas da cliente:\n- Busto: ${busto} cm\n- Cintura: ${cintura} cm\n- Quadril: ${quadril} cm\n\nResponda apenas com o número do tamanho ideal entre 36 e 58. Nenhum texto adicional.`;
+
     const resposta = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
