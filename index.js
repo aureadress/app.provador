@@ -31,14 +31,11 @@ app.post('/chat', async (req, res) => {
     const { busto, cintura, quadril, url, message } = req.body;
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
-    const textoPagina = $('body').html(); // Mantém estrutura HTML completa
-
-    // Loga o conteúdo enviado à IA para debug
-    console.log("\uD83D\uDEE0\uFE0F HTML enviado à OpenAI:\n", textoPagina);
+    const textoPagina = $('body').text();
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    // Se for pergunta do cliente
+    // Se for uma pergunta do cliente (message)
     if (message) {
       const prompt = `Você é um vendedor especialista. Com base na página do produto a seguir:\n${textoPagina}\n\nResponda de forma simpática e objetiva a dúvida: "${message}"`;
       const resposta = await openai.chat.completions.create({
@@ -51,7 +48,7 @@ app.post('/chat', async (req, res) => {
       return res.json({ resposta: resposta.choices[0].message.content });
     }
 
-    // Se for cálculo de tamanho
+    // Se for um cálculo de tamanho
     const prompt = `Com base nas medidas busto ${busto}, cintura ${cintura}, quadril ${quadril}, e no conteúdo da página:\n${textoPagina}\n\nInforme apenas o número do tamanho ideal entre 36 e 58. Nada mais.`;
     const resposta = await openai.chat.completions.create({
       model: 'gpt-4',
