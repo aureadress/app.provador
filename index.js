@@ -27,10 +27,13 @@ app.post('/chat', async (req, res) => {
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
 
-    // EXTRAÇÕES CORRETAS PARA EXCLUSIVE DRESS (Bagy)
+    // ✅ CAPTURA CORRETA PARA EXCLUSIVE DRESS
     const nomeProduto = $('.product-info-content h1').first().text().trim();
-    const descricao = $('.page--product #product-description').text().trim();
 
+    // A descrição está dentro do #product-description
+    const descricao = $('#product-description').text().trim();
+
+    // Procurar tabela com "busto" e "cintura" no texto
     let tabelaMedidas = '';
     $('table').each((_, tabela) => {
       const textoTabela = $(tabela).text().toLowerCase();
@@ -39,6 +42,7 @@ app.post('/chat', async (req, res) => {
       }
     });
 
+    // Captura de cores (deixando preparado mesmo que nem sempre apareça)
     const cores = $('.variant-item').map((_, el) => $(el).text().trim()).get().join(', ');
 
     console.log("🛠️ Dados extraídos:\n", {
