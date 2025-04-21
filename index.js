@@ -12,10 +12,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Caminho para a raiz do projeto (duas pastas acima da pasta api)
+// Caminho para a raiz do projeto (agora é o próprio __dirname)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const rootDir = path.resolve(__dirname, '../..');
+const rootDir = path.resolve(__dirname);
 
 // Servir index.html na rota /
 app.get('/', (req, res) => {
