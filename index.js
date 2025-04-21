@@ -27,9 +27,9 @@ app.post('/chat', async (req, res) => {
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
 
-    // 🔍 Extrações inteligentes
+    // 🧠 Extrações estruturadas com base nas classes da Bagy
     const nomeProduto = $('h1').first().text().trim();
-    const descricao = $('.product-description').text().trim();
+    const descricao = $('.product-description, #product-description').text().trim();
 
     let tabelaMedidas = '';
     $('table').each((i, tabela) => {
@@ -51,30 +51,30 @@ app.post('/chat', async (req, res) => {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     if (message) {
-      const prompt = `Você é um vendedor especialista em moda festa.\n\n🛍️ Produto: ${nomeProduto}\n\n📝 Descrição:\n${descricao}\n\n📏 Tabela de Medidas:\n${tabelaMedidas}\n\n🎨 Cores disponíveis:\n${cores}\n\nA cliente perguntou:\n\"${message}\"\n\nResponda de forma simpática, objetiva e com base nessas informações.`;
+      const prompt = `Você é um vendedor especialista da loja Exclusive Dress.\n\nCom base nas informações abaixo:\n\n⭐ Nome do produto: ${nomeProduto}\n📃 Descrição: ${descricao}\n📏 Tabela de medidas:\n${tabelaMedidas}\n🎨 Cores disponíveis: ${cores}\n\nResponda à seguinte pergunta da cliente:\n"${message}"\n\nSe for dúvida sobre tamanho, informe que ela já inseriu as medidas.\nSe for dúvida sobre entrega, oriente a inserir o CEP na página do produto.\nSe for dúvida sobre troca, devolução ou contato, envie os links: /trocas /contato.`;
 
       const resposta = await openai.chat.completions.create({
         model: 'gpt-4',
         messages: [
-          { role: 'system', content: 'Responda como um atendente simpático, sem emojis.' },
+          { role: 'system', content: 'Responda como um atendente simpático da loja Exclusive Dress. Seja direto, sem emojis.' },
           { role: 'user', content: prompt }
         ]
       });
+
       return res.json({ resposta: resposta.choices[0].message.content });
     }
 
-    const prompt = `Você é um vendedor especialista em vestidos de festa.\n\nCom base nas informações do produto abaixo:\n\n🛍️ Nome: ${nomeProduto}\n\n📝 Descrição:\n${descricao}\n\n📏 Tabela de Medidas:\n${tabelaMedidas}\n\n🎨 Cores disponíveis:\n${cores}\n\nCom base nas medidas da cliente:\n- Busto: ${busto} cm\n- Cintura: ${cintura} cm\n- Quadril: ${quadril} cm\n\nResponda apenas com o número do tamanho ideal entre 36 e 58. Nenhum texto adicional.`;
+    const prompt = `Com base nas medidas da cliente:\n- Busto: ${busto} cm\n- Cintura: ${cintura} cm\n- Quadril: ${quadril} cm\n\nE nas informações da página do produto abaixo:\n\n⭐ Nome do produto: ${nomeProduto}\n📃 Descrição: ${descricao}\n📏 Tabela de medidas:\n${tabelaMedidas}\n🎨 Cores disponíveis: ${cores}\n\nResponda apenas com o número do tamanho ideal entre 36 e 58. Sem nenhum outro texto.`;
 
     const resposta = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
-        { role: 'system', content: 'Responda apenas com o número do tamanho entre 36 e 58.' },
+        { role: 'system', content: 'Responda apenas com o número entre 36 e 58. Nenhuma explicação ou emoji.' },
         { role: 'user', content: prompt }
       ]
     });
 
     return res.json({ resposta: resposta.choices[0].message.content });
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ erro: 'Erro ao processar a requisição' });
