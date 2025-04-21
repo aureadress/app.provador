@@ -18,15 +18,11 @@
         console.warn("⚠️ Erro ao obter nome da loja:", e);
       }
 
-      // Cria botão fixo
+      // Cria botão
       const botao = document.createElement("button");
       botao.id = "btn-provador";
       botao.innerText = "DESCUBRA SEU TAMANHO";
       Object.assign(botao.style, {
-        position: "fixed",
-        bottom: "20px",
-        right: "20px",
-        zIndex: "9999",
         backgroundColor: "#000",
         color: "#fff",
         padding: "14px 20px",
@@ -34,9 +30,12 @@
         borderRadius: "8px",
         fontWeight: "bold",
         fontSize: "13px",
-        cursor: "pointer"
+        cursor: "pointer",
+        margin: "16px 0"
       });
-      document.body.appendChild(botao);
+
+      const target = document.querySelector(".page--product .product-info-content .product-action");
+      if (target) target.parentNode.insertBefore(botao, target);
 
       // Overlay
       const overlay = document.createElement("div");
@@ -120,5 +119,5 @@
       // Exporta nome da loja
       window.nomeLoja = nomeLoja;
     }
-  }, 500); // Checa a cada 0.5s até encontrar .page--product
+  }, 500);
 })();
