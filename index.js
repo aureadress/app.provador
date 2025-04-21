@@ -27,7 +27,7 @@ app.post('/chat', async (req, res) => {
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
 
-    // 🧠 EXTRAÇÕES COMPATÍVEIS COM BAGY
+    // EXTRAÇÕES CORRETAS PARA EXCLUSIVE DRESS (Bagy)
     const nomeProduto = $('.product-info-content h1').first().text().trim();
     const descricao = $('.page--product #product-description').text().trim();
 
