@@ -8,25 +8,21 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 dotenv.config();
-
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Caminho absoluto para a pasta raiz do projeto
+// ⚙️ Caminho correto até a raiz do projeto
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 
-// Servir o index.html do projeto na rota "/"
+// 🔁 Servir o index.html na rota "/"
 app.get('/', (req, res) => {
   res.sendFile(path.join(rootDir, 'index.html'));
 });
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
+// 🔁 Rota POST /chat funcionando normalmente
 app.post('/chat', async (req, res) => {
   try {
     const { busto, cintura, quadril, url, message } = req.body;
@@ -34,9 +30,10 @@ app.post('/chat', async (req, res) => {
     const $ = cheerio.load(response.data);
     const textoPagina = $('body').text();
 
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
     if (message) {
       const prompt = `Você é um vendedor especialista. Com base na página do produto a seguir:\n${textoPagina}\n\nResponda de forma simpática e objetiva a dúvida: "${message}"`;
-
       const resposta = await openai.chat.completions.create({
         model: 'gpt-4',
         messages: [
@@ -44,11 +41,9 @@ app.post('/chat', async (req, res) => {
           { role: 'user', content: prompt }
         ]
       });
-
       return res.json({ resposta: resposta.choices[0].message.content });
     } else {
       const prompt = `Com base nas medidas busto ${busto}, cintura ${cintura}, quadril ${quadril}, e no conteúdo da página:\n${textoPagina}\n\nInforme apenas o número do tamanho ideal entre 36 e 58. Nada mais.`;
-
       const resposta = await openai.chat.completions.create({
         model: 'gpt-4',
         messages: [
@@ -56,11 +51,10 @@ app.post('/chat', async (req, res) => {
           { role: 'user', content: prompt }
         ]
       });
-
       return res.json({ resposta: resposta.choices[0].message.content });
     }
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ erro: 'Erro ao processar a requisição' });
   }
 });
