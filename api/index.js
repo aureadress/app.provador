@@ -3,21 +3,27 @@ import cors from 'cors';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import dotenv from 'dotenv';
+import path from 'path';
 import { OpenAI } from 'openai';
 
 dotenv.config();
 const app = express();
+const __dirname = path.resolve();
+
 app.use(cors());
 app.use(express.json());
+app.use(express.static(__dirname)); // Servir arquivos estáticos, como index.html
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Página principal
 app.get('/', (req, res) => {
-  res.send('🧠 Provador Inteligente - API online!');
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Rota da IA
 app.post('/chat', async (req, res) => {
   try {
     const { busto, cintura, quadril, url, message } = req.body;
