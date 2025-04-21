@@ -27,23 +27,34 @@ app.post('/chat', async (req, res) => {
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
 
-    // ✅ CAPTURA CORRETA PARA EXCLUSIVE DRESS
     const nomeProduto = $('.product-info-content h1').first().text().trim();
-
-    // A descrição está dentro do #product-description
     const descricao = $('#product-description').text().trim();
 
-    // Procurar tabela com "busto" e "cintura" no texto
-    let tabelaMedidas = '';
+    // Tabela de medidas como array de objetos
+    let tabelaMedidas = [];
     $('table').each((_, tabela) => {
-      const textoTabela = $(tabela).text().toLowerCase();
-      if (textoTabela.includes('busto') && textoTabela.includes('cintura')) {
-        tabelaMedidas = $(tabela).text().trim();
-      }
+      const headers = [];
+      $(tabela).find('tr').each((i, row) => {
+        const cells = $(row).find('td, th');
+        if (i === 0) {
+          cells.each((_, cell) => {
+            headers.push($(cell).text().trim().toLowerCase());
+          });
+        } else {
+          const values = {};
+          cells.each((j, cell) => {
+            const key = headers[j];
+            if (key) values[key] = $(cell).text().trim();
+          });
+          if (values['busto'] && values['cintura']) {
+            tabelaMedidas.push(values);
+          }
+        }
+      });
     });
 
-    // Captura de cores (deixando preparado mesmo que nem sempre apareça)
-    const cores = $('.variant-item').map((_, el) => $(el).text().trim()).get().join(', ');
+    // Cores como array de strings
+    let cores = $('.variant-item').map((_, el) => $(el).text().trim()).get();
 
     console.log("🛠️ Dados extraídos:\n", {
       nomeProduto,
@@ -55,7 +66,7 @@ app.post('/chat', async (req, res) => {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     if (message) {
-      const prompt = `Você é um vendedor especialista da loja Exclusive Dress.\n\nCom base nas informações abaixo:\n\n⭐ Nome do produto: ${nomeProduto}\n📜 Descrição: ${descricao}\n📏 Tabela de medidas:\n${tabelaMedidas}\n🎨 Cores disponíveis: ${cores}\n\nResponda à seguinte pergunta da cliente:\n"${message}"\n\nSe for dúvida sobre tamanho, informe que ela já inseriu as medidas.\nSe for dúvida sobre entrega, oriente a inserir o CEP na página do produto.\nSe for dúvida sobre troca, devolução ou contato, envie os links: /trocas /contato.`;
+      const prompt = `Você é um vendedor especialista da loja Exclusive Dress.\n\nCom base nas informações abaixo:\n\n⭐ Nome do produto: ${nomeProduto}\n📜 Descrição: ${descricao}\n📏 Tabela de medidas (como array):\n${JSON.stringify(tabelaMedidas, null, 2)}\n🎨 Cores disponíveis: ${cores.join(', ')}\n\nResponda à seguinte pergunta da cliente:\n"${message}"\n\nSe for dúvida sobre tamanho, informe que ela já inseriu as medidas.\nSe for dúvida sobre entrega, oriente a inserir o CEP na página do produto.\nSe for dúvida sobre troca, devolução ou contato, envie os links: /trocas /contato.`;
 
       const resposta = await openai.chat.completions.create({
         model: 'gpt-4',
@@ -68,7 +79,7 @@ app.post('/chat', async (req, res) => {
       return res.json({ resposta: resposta.choices[0].message.content });
     }
 
-    const prompt = `Com base nas medidas da cliente:\n- Busto: ${busto} cm\n- Cintura: ${cintura} cm\n- Quadril: ${quadril} cm\n\nE nas informações da página do produto abaixo:\n\n⭐ Nome do produto: ${nomeProduto}\n📜 Descrição: ${descricao}\n📏 Tabela de medidas:\n${tabelaMedidas}\n🎨 Cores disponíveis: ${cores}\n\nResponda apenas com o número do tamanho ideal entre 36 e 58. Sem nenhum outro texto.`;
+    const prompt = `Com base nas medidas da cliente:\n- Busto: ${busto} cm\n- Cintura: ${cintura} cm\n- Quadril: ${quadril} cm\n\nE nas informações da página do produto abaixo:\n\n⭐ Nome do produto: ${nomeProduto}\n📜 Descrição: ${descricao}\n📏 Tabela de medidas (como array):\n${JSON.stringify(tabelaMedidas, null, 2)}\n🎨 Cores disponíveis: ${cores.join(', ')}\n\nResponda apenas com o número do tamanho ideal entre 36 e 58. Sem nenhum outro texto.`;
 
     const resposta = await openai.chat.completions.create({
       model: 'gpt-4',
