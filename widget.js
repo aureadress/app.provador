@@ -1,104 +1,64 @@
+// ===============================
+// ARQUIVO: widget.js (ATUALIZADO)
+// ===============================
 (function () {
-  function iniciarWidget() {
-    if (document.getElementById("btn-provador")) return;
+  document.addEventListener("DOMContentLoaded", function () {
+    const checkInterval = setInterval(() => {
+      const isProductPage = document.querySelector(".page--product");
+      const target = document.querySelector(
+        ".page--product .product-info-content .product-action"
+      );
 
-    let nomeLoja = "Loja Parceira";
-    try {
-      const scriptURL = document.currentScript?.src || "";
-      const path = new URL(scriptURL).pathname;
-      nomeLoja = path.split("/")[1].replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase());
-    } catch (e) {
-      console.warn("Erro ao obter nome da loja:", e.message);
-    }
+      if (isProductPage && target && !document.getElementById("btn-provador")) {
+        clearInterval(checkInterval);
 
-    const botao = $('<button id="btn-provador">DESCUBRA SEU TAMANHO</button>').css({
-      backgroundColor: "#000",
-      color: "#fff",
-      padding: "12px 20px",
-      border: "none",
-      borderRadius: "6px",
-      cursor: "pointer",
-      fontSize: "14px",
-      fontWeight: "bold",
-      marginTop: "12px"
-    });
+        const botao = document.createElement("button");
+        botao.id = "btn-provador";
+        botao.innerText = "DESCUBRA SEU TAMANHO";
+        botao.style.backgroundColor = "#000";
+        botao.style.color = "#fff";
+        botao.style.padding = "12px 20px";
+        botao.style.border = "none";
+        botao.style.borderRadius = "6px";
+        botao.style.cursor = "pointer";
+        botao.style.fontSize = "14px";
+        botao.style.fontWeight = "bold";
+        botao.style.marginTop = "12px";
 
-    const target = $(".page--product .product-info-content .product-action");
-    if (target.length) {
-      target.before(botao);
-    } else {
-      $("body").append(botao);
-    }
+        botao.onclick = () => {
+          const iframe = document.createElement("iframe");
+          iframe.src = "https://app.provadorinteligente.com.br?url=" + encodeURIComponent(window.location.href);
+          iframe.style.position = "fixed";
+          iframe.style.top = "50%";
+          iframe.style.left = "50%";
+          iframe.style.transform = "translate(-50%, -50%)";
+          iframe.style.width = "380px";
+          iframe.style.height = "580px";
+          iframe.style.zIndex = "9999";
+          iframe.style.border = "none";
+          iframe.style.borderRadius = "10px";
+          iframe.id = "iframe-provador";
 
-    const overlay = $('<div id="overlay-fundo"></div>').css({
-      display: "none",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100vw",
-      height: "100vh",
-      backgroundColor: "rgba(0,0,0,0.6)",
-      zIndex: 9998
-    });
+          const overlay = document.createElement("div");
+          overlay.id = "overlay-fundo";
+          overlay.style.position = "fixed";
+          overlay.style.top = 0;
+          overlay.style.left = 0;
+          overlay.style.width = "100vw";
+          overlay.style.height = "100vh";
+          overlay.style.backgroundColor = "rgba(0,0,0,0.6)";
+          overlay.style.zIndex = "9998";
+          overlay.onclick = () => {
+            document.body.removeChild(iframe);
+            document.body.removeChild(overlay);
+          };
 
-    const popup = $('<div id="provador-popup"></div>').css({
-      display: "none",
-      position: "fixed",
-      top: "50%",
-      left: "50%",
-      transform: "translate(-50%, -50%)",
-      zIndex: 9999,
-      width: "380px",
-      height: "570px",
-      backgroundColor: "#f2f2f2",
-      borderRadius: "8px",
-      overflow: "hidden",
-      boxShadow: "0 2px 10px rgba(0,0,0,0.3)"
-    });
+          document.body.appendChild(overlay);
+          document.body.appendChild(iframe);
+        };
 
-    const btnFechar = $('<button>✕</button>').css({
-      position: "absolute",
-      top: "-12px",
-      right: "-12px",
-      width: "30px",
-      height: "30px",
-      border: "none",
-      borderRadius: "50%",
-      backgroundColor: "#000",
-      color: "#fff",
-      fontSize: "14px",
-      cursor: "pointer",
-      zIndex: 10000
-    });
-
-    const iframe = $('<iframe></iframe>').attr("src", "https://app.provadorinteligente.com.br/index.html").css({
-      width: "100%",
-      height: "100%",
-      border: "none"
-    });
-
-    popup.append(btnFechar).append(iframe);
-
-    $("body").append(overlay).append(popup);
-
-    botao.on("click", function () {
-      popup.show();
-      overlay.show();
-    });
-
-    btnFechar.on("click", function () {
-      popup.hide();
-      overlay.hide();
-    });
-
-    overlay.on("click", function () {
-      popup.hide();
-      overlay.hide();
-    });
-
-    window.nomeLoja = nomeLoja;
-  }
-
-  $(document).ready(iniciarWidget);
-  setInterval(iniciarWidget, 2000);
+        target.insertBefore(botao, target.firstChild);
+      }
+    }, 500);
+  });
 })();
