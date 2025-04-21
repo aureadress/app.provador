@@ -15,7 +15,7 @@ app.use(express.json());
 // ⚙️ Caminho correto até a raiz do projeto
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const rootDir = path.resolve(__dirname, '..');
+const rootDir = path.resolve(__dirname, '../..');
 
 // 🔁 Servir o index.html na rota "/"
 app.get('/', (req, res) => {
