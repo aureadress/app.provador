@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -79,7 +78,7 @@
       adicionarMensagemCliente(`Minhas medidas são: Busto ${busto} cm, Cintura ${cintura} cm, Quadril ${quadril} cm`);
       document.getElementById("respostaIA").innerText = "CARREGANDO TAMANHO IDEAL...";
       try {
-        const res = await fetch("https://app.provadorinteligente.com.br/chat", {
+        const res = await fetch("/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ busto, cintura, quadril, url: window.location.href })
@@ -95,7 +94,7 @@
       const pergunta = document.getElementById("inputPergunta").value;
       adicionarMensagemCliente(pergunta);
       try {
-        const res = await fetch("https://app.provadorinteligente.com.br/chat", {
+        const res = await fetch("/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: pergunta, url: window.location.href })
