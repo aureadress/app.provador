@@ -12,17 +12,17 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ⚙️ Caminho correto até a raiz do projeto
+// Caminho para a raiz do projeto (duas pastas acima da pasta api)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '../..');
 
-// 🔁 Servir o index.html na rota "/"
+// Servir index.html na rota /
 app.get('/', (req, res) => {
   res.sendFile(path.join(rootDir, 'index.html'));
 });
 
-// 🔁 Rota POST /chat funcionando normalmente
+// Rota POST /chat
 app.post('/chat', async (req, res) => {
   try {
     const { busto, cintura, quadril, url, message } = req.body;
