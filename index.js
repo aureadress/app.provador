@@ -27,19 +27,19 @@ app.post('/chat', async (req, res) => {
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
 
-    // NOVOS SELETORES COMPATÍVEIS COM BAGY
-    const nomeProduto = $('.page--product h1, h1.titulo, .product-info-content h1').first().text().trim();
-    const descricao = $('#product-description, .product-description, .descricao-produto').text().trim();
+    // 🧠 EXTRAÇÕES COMPATÍVEIS COM BAGY
+    const nomeProduto = $('.product-info-content h1').first().text().trim();
+    const descricao = $('.page--product #product-description').text().trim();
 
     let tabelaMedidas = '';
-    $('table').each((i, tabela) => {
+    $('table').each((_, tabela) => {
       const textoTabela = $(tabela).text().toLowerCase();
       if (textoTabela.includes('busto') && textoTabela.includes('cintura')) {
         tabelaMedidas = $(tabela).text().trim();
       }
     });
 
-    const cores = $('.variant-color, .option-color, .product-variants').text().trim();
+    const cores = $('.variant-item').map((_, el) => $(el).text().trim()).get().join(', ');
 
     console.log("🛠️ Dados extraídos:\n", {
       nomeProduto,
