@@ -61,4 +61,14 @@
       }
     }, 500);
   });
+
+  // ✅ Adiciona escuta para fechar widget ao receber mensagem do iframe
+  window.addEventListener("message", function (event) {
+    if (event.data === "fechar-widget") {
+      const iframe = document.getElementById("iframe-provador");
+      const overlay = document.getElementById("overlay-fundo");
+      if (iframe) document.body.removeChild(iframe);
+      if (overlay) document.body.removeChild(overlay);
+    }
+  });
 })();
