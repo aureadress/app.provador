@@ -1,13 +1,8 @@
-// ===============================
-// ARQUIVO: widget.js (ATUALIZADO)
-// ===============================
 (function () {
   document.addEventListener("DOMContentLoaded", function () {
     const checkInterval = setInterval(() => {
       const isProductPage = document.querySelector(".page--product");
-      const target = document.querySelector(
-        ".page--product .product-info-content .product-action"
-      );
+      const target = document.querySelector(".page--product .product-info-content .product-action");
 
       if (isProductPage && target && !document.getElementById("btn-provador")) {
         clearInterval(checkInterval);
@@ -62,7 +57,7 @@
     }, 500);
   });
 
-  // ✅ Adiciona escuta para fechar widget ao receber mensagem do iframe
+  // 🔄 Ouve o comando de fechar vindo do iframe
   window.addEventListener("message", function (event) {
     if (event.data === "fechar-widget") {
       const iframe = document.getElementById("iframe-provador");
