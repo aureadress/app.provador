@@ -38,10 +38,10 @@ app.post('/chat', async (req, res) => {
     // Nome do produto
     const nomeProduto = $('.product-info-content h1').first().text().trim();
 
-    // Descrição (meta description)
+    // Descrição
     const descricao = $('meta[name="description"]').attr('content')?.trim() || '';
 
-    // Extrair tabela de medidas das <table>
+    // Tabela de medidas como array de objetos
     let tabelaMedidas = [];
     $('table').each((_, tabela) => {
       const headers = [];
@@ -60,21 +60,8 @@ app.post('/chat', async (req, res) => {
       });
     });
 
-    // Extrair cores disponíveis
-    const cores = $('.product-color a')
-      .map((_, el) => $(el).attr('title').trim())
-      .get();
-
-    // Extrair tamanhos disponíveis
-    let tamanhosDisponiveis = [];
-    $('.product-attribute.mb-5').each((_, section) => {
-      if ($(section).find('h2').first().text().trim().toUpperCase() === 'TAMANHO') {
-        tamanhosDisponiveis = $(section)
-          .find('.product-attribute-button .text')
-          .map((_, el) => $(el).text().trim())
-          .get();
-      }
-    });
+    // Cores disponíveis
+    const cores = $('.variant-item').map((_, el) => $(el).text().trim()).get();
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -82,16 +69,16 @@ app.post('/chat', async (req, res) => {
       // Prompt para dúvidas gerais da cliente
       const systemMsg = `Responda como um(a) atendente especialista da loja ${nomeEmpresa}, de forma direta e sem emojis.`;
       const userMsg = `Você é um(a) vendedor(a) especialista da loja ${nomeEmpresa}.
-Com base nas informações abaixo sobre o produto:
-- Nome: ${nomeProduto}
+
+Com base nas informações abaixo:
+- Nome do produto: ${nomeProduto}
 - Descrição: ${descricao}
 - Cores disponíveis: ${cores.join(', ')}
-- Tamanhos disponíveis: ${tamanhosDisponiveis.join(', ')}
 
 Responda à seguinte pergunta da cliente:
 "${message}"
 
-- Se for dúvida sobre tamanho, peça que ela insira as medidas de busto, cintura e quadril para que você indique o tamanho ideal.
+- Se for dúvida sobre tamanho, solicite que ela insira as medidas de busto, cintura e quadril.
 - Se for dúvida sobre entrega, oriente-a a inserir o CEP na página do produto.
 - Se for dúvida sobre troca, devolução ou contato, forneça os links: /trocas e /contato.`;
 
@@ -114,23 +101,24 @@ Responda à seguinte pergunta da cliente:
 - Quadril: ${quadril} cm
 
 E nas informações do produto:
-- Nome: ${nomeProduto}
-- Descrição: ${descricao}
-- Tabela de medidas:
+⭐ Nome: ${nomeProduto}
+📜 Descrição: ${descricao}
+📏 Tabela de medidas (array):
 ${JSON.stringify(tabelaMedidas, null, 2)}
-- Cores disponíveis: ${cores.join(', ')}
+🎨 Cores: ${cores.join(', ')}
 
-Siga estas regras para escolher o tamanho:
+Siga estas etapas:
 1. Identifique em cada tamanho os intervalos de busto, cintura e quadril.
-2. Determine o tipo de modelo: evase (mais folgado) ou sereia (mais justo). Se não estiver especificado, use evase.
-3. Atribua pesos para cada modelo:
+2. Determine o modelo: evase (folgado) ou sereia (justo). Se não especificado, use evase.
+3. Aplique pesos:
    - Evase: busto 0,85; cintura 0,15; quadril 0.
    - Sereia: busto 0,70; cintura 0,10; quadril 0,20.
-4. Converta intervalos escritos como “90-94” ou “80/83” em { min: N, max: M }. Para valor único, min = max.
-5. Calcule a diferença entre a medida da cliente e cada intervalo, multiplique pelo peso respectivo.
-6. Some os resultados (score) e escolha o tamanho com menor score. Em caso de empate, prefira o menor tamanho.
-7. Aplique offset: se modelo for sereia, subtraia 1 do tamanho escolhido; se for evase, não aplique offset.
-8. Responda apenas com o número final entre 36 e 58.`;
+4. Converta intervalos como "90-94" ou "80/83" em {min: N, max: M} (para valor único, min = max).
+5. Calcule diferença: se dentro do intervalo, zero; se fora, distância até o intervalo.
+6. Multiplique cada diferença pelo peso e some (score).
+7. Escolha o tamanho com menor score; em empate, o menor.
+8. Se modelo for sereia, subtraia 1 do tamanho escolhido; se evase, sem offset.
+9. Responda apenas com o número final entre 36 e 58.`;
 
     const resposta = await openai.chat.completions.create({
       model: 'gpt-4',
@@ -148,6 +136,4 @@ Siga estas regras para escolher o tamanho:
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
