@@ -27,30 +27,48 @@ app.post('/chat', async (req, res) => {
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
 
-    // 1. Extrair nome da loja do comentário HTML
-    const comentarios = [];
+    // Extrair nome da loja
+    const comments = [];
     $('body').contents().each((_, node) => {
-      if (node.type === 'comment') comentarios.push(node.data.trim());
+      if (node.type === 'comment') comments.push(node.data.trim());
     });
-    const linha = comentarios.find(c => c.startsWith('PROVADOR INTELIGENTE -'));
-    const nomeEmpresa = linha ? linha.split('-')[1].trim() : 'Exclusive Dress';
+    const provadorComment = comments.find(c => c.startsWith('PROVADOR INTELIGENTE -'));
+    const nomeEmpresa = provadorComment ? provadorComment.split('-')[1].trim() : 'Exclusive Dress';
 
-    // 2. Extrair nome do produto
+    // Nome do produto
     const nomeProduto = $('.product-info-content h1').first().text().trim();
 
-    // 3. Extrair descrição do meta description
+    // Descrição (meta description)
     const descricao = $('meta[name="description"]').attr('content')?.trim() || '';
 
-    // 4. Extrair cores disponíveis
+    // Extrair tabela de medidas das <table>
+    let tabelaMedidas = [];
+    $('table').each((_, tabela) => {
+      const headers = [];
+      $(tabela).find('tr').each((i, row) => {
+        const cells = $(row).find('td, th');
+        if (i === 0) {
+          cells.each((_, cell) => headers.push($(cell).text().trim().toLowerCase()));
+        } else {
+          const values = {};
+          cells.each((j, cell) => {
+            const key = headers[j];
+            if (key) values[key] = $(cell).text().trim();
+          });
+          if (values['busto'] && values['cintura']) tabelaMedidas.push(values);
+        }
+      });
+    });
+
+    // Extrair cores disponíveis
     const cores = $('.product-color a')
       .map((_, el) => $(el).attr('title').trim())
       .get();
 
-    // 5. Extrair tamanhos disponíveis
+    // Extrair tamanhos disponíveis
     let tamanhosDisponiveis = [];
     $('.product-attribute.mb-5').each((_, section) => {
-      const titulo = $(section).find('h2').first().text().trim().toUpperCase();
-      if (titulo === 'TAMANHO') {
+      if ($(section).find('h2').first().text().trim().toUpperCase() === 'TAMANHO') {
         tamanhosDisponiveis = $(section)
           .find('.product-attribute-button .text')
           .map((_, el) => $(el).text().trim())
@@ -98,7 +116,8 @@ Responda à seguinte pergunta da cliente:
 E nas informações do produto:
 - Nome: ${nomeProduto}
 - Descrição: ${descricao}
-- Tabela de medidas: ${JSON.stringify(tabelaMedidas, null, 2)}
+- Tabela de medidas:
+${JSON.stringify(tabelaMedidas, null, 2)}
 - Cores disponíveis: ${cores.join(', ')}
 
 Siga estas regras para escolher o tamanho:
