@@ -27,65 +27,97 @@ app.post('/chat', async (req, res) => {
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
 
-    const nomeProduto = $('.product-info-content h1').first().text().trim();
-    const descricao = $('#product-description').text().trim();
-
-    // Tabela de medidas como array de objetos
-    let tabelaMedidas = [];
-    $('table').each((_, tabela) => {
-      const headers = [];
-      $(tabela).find('tr').each((i, row) => {
-        const cells = $(row).find('td, th');
-        if (i === 0) {
-          cells.each((_, cell) => {
-            headers.push($(cell).text().trim().toLowerCase());
-          });
-        } else {
-          const values = {};
-          cells.each((j, cell) => {
-            const key = headers[j];
-            if (key) values[key] = $(cell).text().trim();
-          });
-          if (values['busto'] && values['cintura']) {
-            tabelaMedidas.push(values);
-          }
-        }
-      });
+    // 1. Extrair nome da loja do comentário HTML
+    const comentarios = [];
+    $('body').contents().each((_, node) => {
+      if (node.type === 'comment') comentarios.push(node.data.trim());
     });
+    const linha = comentarios.find(c => c.startsWith('PROVADOR INTELIGENTE -'));
+    const nomeEmpresa = linha ? linha.split('-')[1].trim() : 'Exclusive Dress';
 
-    // Cores como array de strings
-    let cores = $('.variant-item').map((_, el) => $(el).text().trim()).get();
+    // 2. Extrair nome do produto
+    const nomeProduto = $('.product-info-content h1').first().text().trim();
 
-    console.log("🛠️ Dados extraídos:\n", {
-      nomeProduto,
-      descricao,
-      tabelaMedidas,
-      cores
+    // 3. Extrair descrição do meta description
+    const descricao = $('meta[name="description"]').attr('content')?.trim() || '';
+
+    // 4. Extrair cores disponíveis
+    const cores = $('.product-color a')
+      .map((_, el) => $(el).attr('title').trim())
+      .get();
+
+    // 5. Extrair tamanhos disponíveis
+    let tamanhosDisponiveis = [];
+    $('.product-attribute.mb-5').each((_, section) => {
+      const titulo = $(section).find('h2').first().text().trim().toUpperCase();
+      if (titulo === 'TAMANHO') {
+        tamanhosDisponiveis = $(section)
+          .find('.product-attribute-button .text')
+          .map((_, el) => $(el).text().trim())
+          .get();
+      }
     });
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     if (message) {
-      const prompt = `Você é um vendedor especialista da loja Exclusive Dress.\n\nCom base nas informações abaixo:\n\n⭐ Nome do produto: ${nomeProduto}\n📜 Descrição: ${descricao}\n📏 Tabela de medidas (como array):\n${JSON.stringify(tabelaMedidas, null, 2)}\n🎨 Cores disponíveis: ${cores.join(', ')}\n\nResponda à seguinte pergunta da cliente:\n"${message}"\n\nSe for dúvida sobre tamanho, informe que ela já inseriu as medidas.\nSe for dúvida sobre entrega, oriente a inserir o CEP na página do produto.\nSe for dúvida sobre troca, devolução ou contato, envie os links: /trocas /contato.`;
+      // Prompt para dúvidas gerais da cliente
+      const systemMsg = `Responda como um(a) atendente especialista da loja ${nomeEmpresa}, de forma direta e sem emojis.`;
+      const userMsg = `Você é um(a) vendedor(a) especialista da loja ${nomeEmpresa}.
+Com base nas informações abaixo sobre o produto:
+- Nome: ${nomeProduto}
+- Descrição: ${descricao}
+- Cores disponíveis: ${cores.join(', ')}
+- Tamanhos disponíveis: ${tamanhosDisponiveis.join(', ')}
+
+Responda à seguinte pergunta da cliente:
+"${message}"
+
+- Se for dúvida sobre tamanho, peça que ela insira as medidas de busto, cintura e quadril para que você indique o tamanho ideal.
+- Se for dúvida sobre entrega, oriente-a a inserir o CEP na página do produto.
+- Se for dúvida sobre troca, devolução ou contato, forneça os links: /trocas e /contato.`;
 
       const resposta = await openai.chat.completions.create({
         model: 'gpt-4',
         messages: [
-          { role: 'system', content: 'Responda como um atendente simpático da loja Exclusive Dress. Seja direto, sem emojis.' },
-          { role: 'user', content: prompt }
+          { role: 'system', content: systemMsg },
+          { role: 'user', content: userMsg }
         ]
       });
 
       return res.json({ resposta: resposta.choices[0].message.content });
     }
 
-    const prompt = `Com base nas medidas da cliente:\n- Busto: ${busto} cm\n- Cintura: ${cintura} cm\n- Quadril: ${quadril} cm\n\nE nas informações da página do produto abaixo:\n\n⭐ Nome do produto: ${nomeProduto}\n📜 Descrição: ${descricao}\n📏 Tabela de medidas (como array):\n${JSON.stringify(tabelaMedidas, null, 2)}\n🎨 Cores disponíveis: ${cores.join(', ')}\n\nResponda apenas com o número do tamanho ideal entre 36 e 58. Sem nenhum outro texto.`;
+    // Prompt para recomendação de tamanho
+    const systemMsg = 'Responda apenas com o número do tamanho ideal entre 36 e 58. Nenhum outro texto.';
+    const userMsg = `Com base nas medidas da cliente:
+- Busto: ${busto} cm
+- Cintura: ${cintura} cm
+- Quadril: ${quadril} cm
+
+E nas informações do produto:
+- Nome: ${nomeProduto}
+- Descrição: ${descricao}
+- Tabela de medidas: ${JSON.stringify(tabelaMedidas, null, 2)}
+- Cores disponíveis: ${cores.join(', ')}
+
+Siga estas regras para escolher o tamanho:
+1. Identifique em cada tamanho os intervalos de busto, cintura e quadril.
+2. Determine o tipo de modelo: evase (mais folgado) ou sereia (mais justo). Se não estiver especificado, use evase.
+3. Atribua pesos para cada modelo:
+   - Evase: busto 0,85; cintura 0,15; quadril 0.
+   - Sereia: busto 0,70; cintura 0,10; quadril 0,20.
+4. Converta intervalos escritos como “90-94” ou “80/83” em { min: N, max: M }. Para valor único, min = max.
+5. Calcule a diferença entre a medida da cliente e cada intervalo, multiplique pelo peso respectivo.
+6. Some os resultados (score) e escolha o tamanho com menor score. Em caso de empate, prefira o menor tamanho.
+7. Aplique offset: se modelo for sereia, subtraia 1 do tamanho escolhido; se for evase, não aplique offset.
+8. Responda apenas com o número final entre 36 e 58.`;
 
     const resposta = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
-        { role: 'system', content: 'Responda apenas com o número entre 36 e 58. Nenhuma explicação ou emoji.' },
-        { role: 'user', content: prompt }
+        { role: 'system', content: systemMsg },
+        { role: 'user', content: userMsg }
       ]
     });
 
