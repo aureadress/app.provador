@@ -60,7 +60,63 @@ app.post('/chat', async (req, res) => {
       });
     }
 
-    // Fluxos de atendimento e recomendação (idem ao original)
+    // Extrai cores disponíveis (caso queira usar em dúvidas)
+    const cores = $('.variant-item').map((_, el) => $(el).text().trim()).get();
+
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+    // Fluxo de atendimento a dúvidas abertas
+    if (message) {
+      const promptGeral = `
+Você é um vendedor especialista da Exclusive Dress.
+Produto: ${nomeProduto}
+Descrição: ${descricao}
+Cores: ${cores.join(', ')}
+Tabela de medidas: ${JSON.stringify(tabelaMedidas)}
+
+Dúvida: "${message}"
+`;
+      const atendimento = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [
+          { role: 'system', content: 'Seja breve e direto, sem emojis.' },
+          { role: 'user', content: promptGeral }
+        ]
+      });
+
+      return res.json({
+        resposta: atendimento.choices[0].message.content.trim(),
+        complemento: ''  // sem complemento neste fluxo
+      });
+    }
+
+    // Fluxo de recomendação de tamanho
+    const promptTamanho = `
+Você é assistente de vendas de moda. Com base nestas medidas da cliente:
+- Busto: ${busto} cm
+- Cintura: ${cintura} cm
+- Quadril: ${quadril} cm
+E na tabela de medidas JSON: ${JSON.stringify(tabelaMedidas)}
+Indique apenas o número do tamanho ideal (36–58).
+`;
+
+    const sizeCompletion = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        { role: 'system', content: 'Responda apenas com o número do tamanho, sem texto extra.' },
+        { role: 'user', content: promptTamanho }
+      ]
+    });
+
+    const tamanhoIdeal = sizeCompletion.choices[0].message.content.trim();
+    const cupom = `TAM${tamanhoIdeal}`;
+    const complemento = `Você está prestes para arrasar com o **${nomeProduto}** no tamanho **${tamanhoIdeal}**! Para facilitar, liberei um cupom especial:\n**Código do Cupom: ${cupom}** — use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!`;
+
+    return res.json({
+      resposta: tamanhoIdeal,
+      complemento
+    });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ erro: 'Erro ao processar a requisição' });
