@@ -32,6 +32,7 @@
       border-radius: 0 0 8px 8px;
       text-align: center;
     }
+    /* Estilos para tarja e números em negrito */
     #faixa {
       background-color: #000;
       color: #fff;
@@ -52,6 +53,7 @@
       display: block;
       font-weight: bold;
     }
+    /* Mensagens de chat */
     .msg {
       padding: 10px;
       border-radius: 10px;
@@ -59,14 +61,14 @@
       max-width: 90%;
     }
     .msg.user {
-      background: #000;
-      color: #fff;
+      background: #e0e0e0;
+      color: #000;
       align-self: flex-end;
       text-align: left;
     }
     .msg.bot {
-      background: #f1f1f1;
-      color: #000;
+      background: #333;
+      color: #fff;
       align-self: flex-start;
       text-align: left;
     }
@@ -144,15 +146,15 @@
       const medidaDiv = document.createElement('div');
       medidaDiv.className = 'msg user';
       medidaDiv.innerHTML = `
-        <div>Minhas medidas são</div>
-        <div>Busto: <strong>${busto} cm</strong></div>
-        <div>Cintura: <strong>${cintura} cm</strong></div>
-        <div>Quadril: <strong>${quadril} cm</strong></div>
+        <div>Minhas medidas são:</div>
+        <div><strong>Busto:</strong> <strong>${busto}</strong> cm</div>
+        <div><strong>Cintura:</strong> <strong>${cintura}</strong> cm</div>
+        <div><strong>Quadril:</strong> <strong>${quadril}</strong> cm</div>
       `;
       addMsgElement(medidaDiv);
 
       const resposta = await fetch("/chat", {
-        method: "POST",
+        method: "POST",  
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ busto, cintura, quadril, url: urlProduto })
       }).then(r => r.json());
@@ -161,7 +163,7 @@
 
       const botDiv = document.createElement('div');
       botDiv.className = 'msg bot';
-      botDiv.innerHTML = resposta.complemento;
+      botDiv.innerText = resposta.complemento;
       addMsgElement(botDiv);
     }
 
@@ -170,7 +172,7 @@
       if (!pergunta.trim()) return;
 
       const userDiv = document.createElement('div');
-      userDiv.className = 'msg user';
+      userDiv.className = 'msg.user';
       userDiv.innerText = pergunta;
       addMsgElement(userDiv);
 
@@ -185,8 +187,8 @@
       }).then(r => r.json());
 
       const botDiv = document.createElement('div');
-      botDiv.className = 'msg bot';
-      botDiv.innerHTML = resposta.resposta;
+      botDiv.className = 'msg.bot';
+      botDiv.innerText = resposta.resposta;
       addMsgElement(botDiv);
 
       document.getElementById("pergunta").value = "";
