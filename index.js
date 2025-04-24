@@ -12,11 +12,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Servir arquivos estáticos
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname);
 app.use(express.static(rootDir));
 
+// Rota principal
 app.get('/', (req, res) => {
   res.sendFile(path.join(rootDir, 'index.html'));
 });
@@ -27,11 +29,11 @@ app.post('/chat', async (req, res) => {
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
 
-    // Extrai nome e descrição do produto
+    // Extrai informações do produto
     const nomeProduto = $('.product-info-content h1').first().text().trim();
     const descricao = $('#product-description').text().trim();
 
-    // Extrai tabela de medidas
+    // Monta tabela de medidas (array de objetos)
     let tabelaMedidas = [];
     $('table').each((_, tabela) => {
       const headers = [];
@@ -50,27 +52,30 @@ app.post('/chat', async (req, res) => {
       });
     });
 
+    // Se não houver tabela, retorna mensagem de erro
+    if (!tabelaMedidas.length) {
+      return res.json({
+        resposta: '',
+        complemento: 'Não consigo fornecer uma recomendação de tamanho sem a tabela de medidas.'
+      });
+    }
+
     // Extrai cores disponíveis
     const cores = $('.variant-item').map((_, el) => $(el).text().trim()).get();
 
-    console.log("🛠️ Dados extraídos:", { nomeProduto, descricao, tabelaMedidas, cores });
-
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    // Se vier mensagem de dúvida aberta
+    // Atendimento para dúvidas abertas
     if (message) {
       const promptGeral = `
 Você é um vendedor especialista da Exclusive Dress.
-Com base nas informações:
-- Nome do produto: ${nomeProduto}
-- Descrição: ${descricao}
-- Tabela de medidas: ${JSON.stringify(tabelaMedidas)}
-- Cores: ${cores.join(', ')}
-Responda à dúvida: "${message}"
-- Dúvidas sobre tamanho → informe que a cliente já inseriu as medidas.
-- Sobre entrega → peça para inserir o CEP na página.
-- Sobre troca/devolução → informe os links /trocas e /contato.
-      `.trim();
+Produto: ${nomeProduto}
+Descrição: ${descricao}
+Cores: ${cores.join(', ')}
+Tabela de medidas: ${JSON.stringify(tabelaMedidas)}
+
+Dúvida: "${message}"
+`;
 
       const atendimento = await openai.chat.completions.create({
         model: 'gpt-4',
@@ -85,16 +90,15 @@ Responda à dúvida: "${message}"
       });
     }
 
-    // Calcular tamanho ideal
+    // Recomendação de tamanho ideal
     const promptTamanho = `
-Você é um assistente de vendas de moda. Recomendarei um tamanho (36–58)
-com base nas medidas da cliente e na tabela.
-Dados:
+Você é assistente de vendas de moda. Com base nestas medidas da cliente:
 - Busto: ${busto} cm
 - Cintura: ${cintura} cm
 - Quadril: ${quadril} cm
-Tabela de medidas JSON: ${JSON.stringify(tabelaMedidas)}
-`.trim();
+E na tabela de medidas JSON: ${JSON.stringify(tabelaMedidas)}
+Indique apenas o número do tamanho ideal (36–58).
+`;
 
     const sizeCompletion = await openai.chat.completions.create({
       model: 'gpt-4',
@@ -106,18 +110,14 @@ Tabela de medidas JSON: ${JSON.stringify(tabelaMedidas)}
 
     const tamanhoIdeal = sizeCompletion.choices[0].message.content.trim();
 
-    // Gerar cupom e mensagem complementar localmente
+    // Gera código de cupom e mensagem complementar
     const cupom = `TAM${tamanhoIdeal}`;
-    const complemento = 
-      `Você está prestes para arrasar com o ${nomeProduto} no tamanho ${tamanhoIdeal}! ` +
-      `Para facilitar essa decisão, liberei um cupom especial para você:\n` +
-      `Código do Cupom: ${cupom}`;
+    const complemento = `Você está prestes para arrasar com o ${nomeProduto} no tamanho ${tamanhoIdeal}! Seu cupom exclusivo: ${cupom}`;
 
-    // Retornar tamanho ideal e complemento
+    // Retorna tamanho e complemento
     return res.json({
       resposta: tamanhoIdeal,
-      complemento,
-      nomeProduto
+      complemento
     });
 
   } catch (err) {
