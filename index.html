@@ -61,7 +61,7 @@
       border-radius: 10px;
       margin-bottom: 10px;
       max-width: 90%;
-      font-weight: normal; /* reset */
+      font-weight: normal; /* só o que for <strong> fica em negrito */
     }
     .msg.user {
       background: #e0e0e0;
@@ -78,7 +78,10 @@
   </style>
 </head>
 <body style="margin:0; padding:0; background-color:#f5f5f5;">
-  <div id="widget-provador" style="width:380px; height:570px; background:#f2f2f2; border-radius:8px; display:flex; flex-direction:column; box-shadow:0 2px 8px rgba(0,0,0,0.16); position:relative;">
+  <div id="widget-provador"
+       style="width:380px; height:570px; background:#f2f2f2; border-radius:8px;
+              display:flex; flex-direction:column; box-shadow:0 2px 8px rgba(0,0,0,0.16);
+              position:relative;">
 
     <!-- TOPO -->
     <div style="background:#000; text-align:center; padding:12px; position:relative;">
@@ -86,7 +89,8 @@
            alt="logo"
            style="height:69px; width:196px;" />
       <button onclick="window.parent.postMessage('fechar-widget','*')"
-              style="position:absolute; top:12px; right:12px; background:transparent; border:none; cursor:pointer; width:32px; height:32px;">
+              style="position:absolute; top:12px; right:12px; background:transparent;
+                     border:none; cursor:pointer; width:32px; height:32px;">
         <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
           <circle cx="16" cy="16" r="15" fill="white" stroke="black" stroke-width="2"/>
           <path d="M11 11L21 21" stroke="black" stroke-width="2.5" stroke-linecap="round"/>
@@ -97,7 +101,8 @@
 
     <!-- CHAT -->
     <div id="chat"
-         style="flex:1; padding:8px; font-size:13px; overflow-y:auto; background:#eaeaea; display:flex; flex-direction:column;">
+         style="flex:1; padding:8px; font-size:13px; overflow-y:auto;
+                background:#eaeaea; display:flex; flex-direction:column;">
     </div>
 
     <!-- TARJA -->
@@ -125,7 +130,8 @@
     <!-- BOTÃO -->
     <div style="padding:4px 8px;">
       <button onclick="enviarMedidas()"
-              style="width:100%; height:30px; background:#000; color:#fff; border:none; border-radius:6px;">
+              style="width:100%; height:30px; background:#000; color:#fff;
+                     border:none; border-radius:6px;">
         <strong>ENVIAR MEDIDAS</strong>
       </button>
     </div>
@@ -137,13 +143,15 @@
              placeholder="Digite sua dúvida..."
              style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc;">
       <button onclick="enviarPergunta()"
-              style="width:44px; height:44px; background:#000; color:#fff; border:none; border-radius:8px; margin-left:8px; font-size:18px;">
+              style="width:44px; height:44px; background:#000; color:#fff;
+                     border:none; border-radius:8px; margin-left:8px; font-size:18px;">
         ➤
       </button>
     </div>
 
     <!-- RODAPÉ -->
-    <div style="background:#000; color:#fff; font-size:10px; text-align:center; padding:6px; font-weight:bold;">
+    <div style="background:#000; color:#fff; font-size:10px;
+                text-align:center; padding:6px; font-weight:bold;">
       TECNOLOGIA PROVADOR INTELIGENTE
     </div>
   </div>
@@ -163,7 +171,7 @@
       const cintura = document.getElementById("cintura").value;
       const quadril = document.getElementById("quadril").value;
 
-      // mostra medidas do usuário (apenas números em negrito)
+      // Exibe as medidas (só números em negrito)
       const userDiv = document.createElement("div");
       userDiv.className = "msg user";
       userDiv.innerHTML = `
@@ -174,27 +182,27 @@
       `;
       addMsg(userDiv);
 
-      // requisição ao servidor
+      // Chama o backend
       const resp = await fetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ busto, cintura, quadril, url: urlProduto })
       }).then(r => r.json());
 
-      const tamanho = resp.resposta;          // ex: "42"
-      const nomeVestido = resp.nomeProduto;   // deve vir do servidor
+      const tamanho = resp.resposta;         // ex: "42"
+      const nomeVestido = resp.nomeProduto;  // do servidor
       const cupom = "TAM" + tamanho;
 
-      // preenche tarja preta
+      // Atualiza tarja
       document.getElementById("provador-tamanho").innerText = tamanho;
 
-      // mensagem de celebração (negrito só em nome, número e cupom)
+      // Mensagem de celebração (nome, tamanho e cupom em negrito)
       const botDiv = document.createElement("div");
       botDiv.className = "msg bot";
       botDiv.innerHTML = `
         Você está prestes para arrasar com o <strong>${nomeVestido}</strong> no tamanho <strong>${tamanho}</strong>!<br>
         Para facilitar essa decisão, liberei um cupom especial para você:<br>
-        Código do Cupom: <strong>${cupom}</strong> — use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!
+        Código do Cupom: <strong>${cupom}</strong> — use na finalização da compra e aproveite o desconto.
       `;
       addMsg(botDiv);
     }
