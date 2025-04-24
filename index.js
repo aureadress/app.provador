@@ -86,7 +86,7 @@ Dúvida: "${message}"
 
       return res.json({
         resposta: atendimento.choices[0].message.content.trim(),
-        complemento: ''  // sem complemento neste fluxo
+        complemento: '' // sem complemento neste fluxo
       });
     }
 
@@ -110,7 +110,8 @@ Indique apenas o número do tamanho ideal (36–58).
 
     const tamanhoIdeal = sizeCompletion.choices[0].message.content.trim();
     const cupom = `TAM${tamanhoIdeal}`;
-    const complemento = `Você está prestes para arrasar com o **${nomeProduto}** no tamanho **${tamanhoIdeal}**! Para facilitar, liberei um cupom especial:\n**Código do Cupom: ${cupom}** — use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!`;
+    const complemento = `Você está prestes para arrasar com o <strong>${nomeProduto}</strong> no tamanho <strong>${tamanhoIdeal}</strong>! Para facilitar, liberei um cupom especial:
+Código do Cupom: <strong>${cupom}</strong> — use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!`;
 
     return res.json({
       resposta: tamanhoIdeal,
