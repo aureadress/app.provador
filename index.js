@@ -33,21 +33,29 @@ app.post('/chat', async (req, res) => {
     const nomeProduto = $('.product-info-content h1').first().text().trim();
     const descricao = $('#product-description').text().trim();
 
-    // NOVO BLOCO: Monta tabela de medidas só na descrição do produto
+    // Monta tabela de medidas (versão inteligente)
     let tabelaMedidas = [];
-    $('#product-description table').each((_, tabela) => {
-      const headers = [];
+    $('table').each((_, tabela) => {
+      let headers = [];
+      let foundHeader = false;
       $(tabela).find('tr').each((i, row) => {
         const cells = $(row).find('td, th');
-        if (i === 0) {
-          cells.each((_, cell) => headers.push($(cell).text().trim().toLowerCase()));
-        } else {
+        const cellTexts = cells.map((_, cell) => $(cell).text().trim().toLowerCase()).get();
+
+        // Identifica a linha do cabeçalho
+        if (!foundHeader && cellTexts.includes('busto') && cellTexts.includes('cintura')) {
+          headers = cellTexts;
+          foundHeader = true;
+          return;
+        }
+
+        // Só processa linhas após o cabeçalho
+        if (foundHeader && cells.length === headers.length) {
           const values = {};
           cells.each((j, cell) => {
             const key = headers[j];
             if (key) values[key] = $(cell).text().trim();
           });
-          // Só adiciona se tiver busto E cintura
           if (values['busto'] && values['cintura']) tabelaMedidas.push(values);
         }
       });
@@ -61,12 +69,12 @@ app.post('/chat', async (req, res) => {
       });
     }
 
-    // Extrai cores disponíveis (caso queira usar em dúvidas)
+    // Extrai cores disponíveis
     const cores = $('.variant-item').map((_, el) => $(el).text().trim()).get();
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    // Fluxo de atendimento a dúvidas abertas
+    // Fluxo de dúvidas
     if (message) {
       const promptGeral = `
 Você é um vendedor especialista da Exclusive Dress.
@@ -87,7 +95,7 @@ Dúvida: "${message}"
 
       return res.json({
         resposta: atendimento.choices[0].message.content.trim(),
-        complemento: ''  // sem complemento neste fluxo
+        complemento: ''
       });
     }
 
@@ -111,7 +119,7 @@ Indique apenas o número do tamanho ideal (36–58).
 
     const tamanhoIdeal = sizeCompletion.choices[0].message.content.trim();
     const cupom = `TAM${tamanhoIdeal}`;
-    const complemento = `Você está prestes para arrasar com o **${nomeProduto}** no tamanho **${tamanhoIdeal}**! Para facilitar, liberei um cupom especial:\n**Código do Cupom: ${cupom}** — use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!`;
+    const complemento = `Você está prestes para arrasar com o <strong>${nomeProduto}</strong> no tamanho <strong>${tamanhoIdeal}</strong>! Para facilitar, liberei um cupom especial:<br><strong>Código do Cupom: ${cupom}</strong> — use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!`;
 
     return res.json({
       resposta: tamanhoIdeal,
