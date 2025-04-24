@@ -33,7 +33,7 @@ app.post('/chat', async (req, res) => {
     const nomeProduto = $('.product-info-content h1').first().text().trim();
     const descricao = $('#product-description').text().trim();
 
-    // Monta tabela de medidas
+    // Monta tabela de medidas (lógica restaurada)
     let tabelaMedidas = [];
     $('table').each((_, tabela) => {
       const headers = [];
