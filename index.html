@@ -154,7 +154,7 @@
       addMsgElement(medidaDiv);
 
       const resposta = await fetch("/chat", {
-        method: "POST",  
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ busto, cintura, quadril, url: urlProduto })
       }).then(r => r.json());
@@ -172,7 +172,7 @@
       if (!pergunta.trim()) return;
 
       const userDiv = document.createElement('div');
-      userDiv.className = 'msg.user';
+      userDiv.className = 'msg user';
       userDiv.innerText = pergunta;
       addMsgElement(userDiv);
 
@@ -187,13 +187,14 @@
       }).then(r => r.json());
 
       const botDiv = document.createElement('div');
-      botDiv.className = 'msg.bot';
+      botDiv.className = 'msg bot';
       botDiv.innerText = resposta.resposta;
       addMsgElement(botDiv);
 
       document.getElementById("pergunta").value = "";
     }
 
+    // Fecha o widget ao receber mensagem do iframe
     window.addEventListener("message", function (event) {
       if (event.data === "fechar-widget") {
         const iframe = document.getElementById("iframe-provador");
