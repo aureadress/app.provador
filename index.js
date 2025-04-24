@@ -25,8 +25,6 @@ app.get('/', (req, res) => {
 
 app.post('/chat', async (req, res) => {
   try {
-    // Debug: log do corpo da requisição
-    console.log('Recebido /chat:', req.body);
     const { busto, cintura, quadril, url, message } = req.body;
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
@@ -51,13 +49,11 @@ app.post('/chat', async (req, res) => {
             const key = headers[j];
             if (key) values[key] = $(cell).text().trim();
           });
-          if (values['busto'] && values['cintura']) tabelaMedidas.push(values);
+          if (values['busto'] && values['cintura'])
+            tabelaMedidas.push(values);
         }
       });
     });
-
-    // Debug: log da tabela de medidas extraída
-    console.log('Tabela de medidas extraída:', tabelaMedidas);
 
     // Se não houver tabela, retorna erro amigável
     if (!tabelaMedidas.length) {
