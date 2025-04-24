@@ -67,15 +67,15 @@ app.post('/chat', async (req, res) => {
 
     // Fluxo de atendimento a dúvidas abertas
     if (message) {
-      const promptGeral = `
+      const promptGeral = \`
 Você é um vendedor especialista da Exclusive Dress.
-Produto: ${nomeProduto}
-Descrição: ${descricao}
-Cores: ${cores.join(', ')}
-Tabela de medidas: ${JSON.stringify(tabelaMedidas)}
+Produto: \${nomeProduto}
+Descrição: \${descricao}
+Cores: \${cores.join(', ')}
+Tabela de medidas: \${JSON.stringify(tabelaMedidas)}
 
-Dúvida: "${message}"
-`;
+Dúvida: "\${message}"
+\`;
       const atendimento = await openai.chat.completions.create({
         model: 'gpt-4',
         messages: [
@@ -91,14 +91,14 @@ Dúvida: "${message}"
     }
 
     // Fluxo de recomendação de tamanho
-    const promptTamanho = `
+    const promptTamanho = \`
 Você é assistente de vendas de moda. Com base nestas medidas da cliente:
-- Busto: ${busto} cm
-- Cintura: ${cintura} cm
-- Quadril: ${quadril} cm
-E na tabela de medidas JSON: ${JSON.stringify(tabelaMedidas)}
+- Busto: \${busto} cm
+- Cintura: \${cintura} cm
+- Quadril: \${quadril} cm
+E na tabela de medidas JSON: \${JSON.stringify(tabelaMedidas)}
 Indique apenas o número do tamanho ideal (36–58).
-`;
+\`;
 
     const sizeCompletion = await openai.chat.completions.create({
       model: 'gpt-4',
@@ -109,8 +109,9 @@ Indique apenas o número do tamanho ideal (36–58).
     });
 
     const tamanhoIdeal = sizeCompletion.choices[0].message.content.trim();
-    const cupom = `TAM${tamanhoIdeal}`;
-    const complemento = `Você está prestes para arrasar com o **${nomeProduto}** no tamanho **${tamanhoIdeal}**! Para facilitar, liberei um cupom especial:\n**Código do Cupom: ${cupom}** — use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!`;
+    const cupom = \`TAM\${tamanhoIdeal}\`;
+    const complemento = \`Você está prestes para arrasar com o <strong>\${nomeProduto}</strong> no tamanho <strong>\${tamanhoIdeal}</strong>! Para facilitar, liberei um cupom especial:
+Código do Cupom: <strong>\${cupom}</strong> — use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!\`;
 
     return res.json({
       resposta: tamanhoIdeal,
@@ -124,4 +125,4 @@ Indique apenas o número do tamanho ideal (36–58).
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+app.listen(PORT, () => console.log(\`Servidor rodando na porta \${PORT}\`));
