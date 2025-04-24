@@ -32,7 +32,6 @@
       border-radius: 0 0 8px 8px;
       text-align: center;
     }
-    /* Estilos para tarja e números em negrito */
     #faixa {
       background-color: #000;
       color: #fff;
@@ -53,29 +52,23 @@
       display: block;
       font-weight: bold;
     }
-    /* Mensagens de chat */
     .msg {
-      font-weight: normal;
       padding: 10px;
       border-radius: 10px;
       margin-bottom: 10px;
       max-width: 90%;
     }
     .msg.user {
-      background: #e0e0e0;
-      color: #000;
+      background: #000;
+      color: #fff;
       align-self: flex-end;
       text-align: left;
     }
     .msg.bot {
-      background: #333;
-      color: #fff;
+      background: #f1f1f1;
+      color: #000;
       align-self: flex-start;
       text-align: left;
-    }
-    /* Mantém strong destacado */
-    strong {
-      font-weight: bold;
     }
   </style>
 </head>
@@ -150,12 +143,12 @@
 
       const medidaDiv = document.createElement('div');
       medidaDiv.className = 'msg user';
-      medidaDiv.innerHTML = 
-        <div>Minhas medidas são:</div>
-        <div>Busto: <strong>${busto}</strong> cm</div>
-        <div>Cintura: <strong>${cintura}</strong> cm</div>
-        <div>Quadril: <strong>${quadril}</strong> cm</div>
-      ;
+      medidaDiv.innerHTML = `
+        <div>Minhas medidas são</div>
+        <div>Busto: <strong>${busto} cm</strong></div>
+        <div>Cintura: <strong>${cintura} cm</strong></div>
+        <div>Quadril: <strong>${quadril} cm</strong></div>
+      `;
       addMsgElement(medidaDiv);
 
       const resposta = await fetch("/chat", {
@@ -199,7 +192,6 @@
       document.getElementById("pergunta").value = "";
     }
 
-    // Fecha o widget ao receber mensagem do iframe
     window.addEventListener("message", function (event) {
       if (event.data === "fechar-widget") {
         const iframe = document.getElementById("iframe-provador");
