@@ -32,50 +32,15 @@
       border-radius: 0 0 8px 8px;
       text-align: center;
     }
-    /* Estilos para tarja e números em negrito */
-    #faixa {
-      background-color: #000;
-      color: #fff;
-      text-align: center;
-      font-size: 11px;
-      font-weight: bold;
-      padding: 8px 4px;
-      line-height: 1.2;
-    }
-    #faixa .banner-text {
-      text-transform: uppercase;
-    }
-    #faixa .banner-size {
-      margin-top: 4px;
-    }
-    #faixa .banner-size strong {
-      font-size: 20px;
-      display: block;
-      font-weight: bold;
-    }
-    /* Mensagens de chat */
-    .msg {
-      padding: 10px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      max-width: 90%;
-    }
-    .msg.user {
-      background: #e0e0e0;
-      color: #000;
-      align-self: flex-end;
-      text-align: left;
-    }
-    .msg.bot {
-      background: #333;
-      color: #fff;
-      align-self: flex-start;
-      text-align: left;
+    /* Força peso normal (não negrito) em todo o widget por padrão */
+    #widget-provador,
+    #widget-provador * {
+      font-weight: 400 !important;
     }
   </style>
 </head>
 <body style="margin:0; padding:0; background-color:#f5f5f5; font-family: Montserrat, sans-serif;">
-  <div id="widget-provador" style="width: 380px; height: 570px; background-color: #f2f2f2; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(0,0,0,0.16); position: relative;">
+  <div id="widget-provador" style="width: 380px; height: 570px; background-color: #f2f2f2; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(0,0,0,0,16); position: relative;">
 
     <!-- TOPO -->
     <div style="background-color: #000; text-align: center; padding: 12px; position: relative;">
@@ -86,12 +51,11 @@
     </div>
 
     <!-- CHAT -->
-    <div id="chat" style="flex: 1; padding: 8px; font-size: 13px; overflow-y: auto; background: #eaeaea; display: flex; flex-direction: column;"></div>
+    <div id="chat" style="flex: 1; padding: 8px; font-size: 13px; overflow-y: auto; background: #eaeaea;"></div>
 
     <!-- TARJA -->
-    <div id="faixa">
-      <div class="banner-text">COM BASE NAS MEDIDAS ABAIXO, O TAMANHO IDEAL É</div>
-      <div class="banner-size"><strong id="provador-tamanho"></strong></div>
+    <div id="faixa" style="background-color: #000; color: #fff; text-align: center; font-size: 11px; font-weight: bold; padding: 6px 8px;">
+      INSIRA SUAS MEDIDAS E DESCUBRA O TAMANHO IDEAL
     </div>
 
     <!-- INPUTS -->
@@ -134,8 +98,20 @@
     const urlParams = new URLSearchParams(window.location.search);
     const urlProduto = urlParams.get("url") || window.location.href;
 
-    function addMsgElement(element) {
-      chat.appendChild(element);
+    // Função para adicionar mensagens no chat (agora usa innerHTML)
+    function addMsg(tipo, texto) {
+      const div = document.createElement("div");
+      div.className = "msg";
+      div.style.background = tipo === "user" ? "#e0e0e0" : "#333";
+      div.style.color = tipo === "user" ? "black" : "white";
+      div.style.padding = "10px";
+      div.style.borderRadius = "10px";
+      div.style.marginBottom = "10px";
+      div.style.maxWidth = "90%";
+      div.style.alignSelf = tipo === "user" ? "flex-end" : "flex-start";
+      // Insere HTML para respeitar <strong>
+      div.innerHTML = texto;
+      chat.appendChild(div);
       chat.scrollTop = chat.scrollHeight;
     }
 
@@ -143,57 +119,53 @@
       const busto = document.getElementById("busto").value;
       const cintura = document.getElementById("cintura").value;
       const quadril = document.getElementById("quadril").value;
+      // Envia apenas os números em negrito na mensagem do usuário
+      addMsg("user", `Minhas medidas são: Busto <strong>${busto} cm</strong>, Cintura <strong>${cintura} cm</strong>, Quadril <strong>${quadril} cm</strong>`);
 
-      // Empilha as medidas com apenas números em negrito
-      const medidaDiv = document.createElement('div');
-      medidaDiv.className = 'msg user';
-      medidaDiv.innerHTML = `
-        <div>Minhas medidas são:</div>
-        <div><strong>Busto:</strong> <strong>${busto}</strong> cm</div>
-        <div><strong>Cintura:</strong> <strong>${cintura}</strong> cm</div>
-        <div><strong>Quadril:</strong> <strong>${quadril}</strong> cm</div>
-      `;
-      addMsgElement(medidaDiv);
-
-      // Requisição única para obter tamanho e complemento
+      // Requisição para obter tamanho (resposta curta)
       const resposta = await fetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ busto, cintura, quadril, url: urlProduto })
       }).then(r => r.json());
 
-      // Atualiza tarja preta
-      document.getElementById('provador-tamanho').innerText = resposta.resposta;
+      // Atualiza tarja preta, com o tamanho em negrito
+      faixa.innerHTML = `
+        COM BASE NAS MEDIDAS ABAIXO, O TAMANHO IDEAL É O:<br>
+        <span style="font-size:20px; font-weight:bold;">${resposta.resposta}</span>
+      `;
 
-      // Mensagem complementar
-      const botDiv = document.createElement('div');
-      botDiv.className = 'msg bot';
-      botDiv.innerText = resposta.complemento;
-      addMsgElement(botDiv);
+      // Requisição para obter texto complementar
+      const resposta2 = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ busto, cintura, quadril, url: urlProduto, message: "Qual tamanho ideal?" })
+      }).then(r => r.json());
+
+      // Formata nome do vestido e tamanho em negrito
+      let formatted = resposta2.resposta.replace(
+        /(Vestido[\s\S]*?)(tamanho) (\d+)/i,
+        (_, nome, label, tamanho) => `<strong>${nome.trim()}</strong> ${label} <strong>${tamanho}</strong>`
+      );
+      addMsg("bot", formatted);
     }
 
     async function enviarPergunta() {
       const pergunta = document.getElementById("pergunta").value;
       if (!pergunta.trim()) return;
-      const userDiv = document.createElement('div');
-      userDiv.className = 'msg user';
-      userDiv.innerText = pergunta;
-      addMsgElement(userDiv);
+      addMsg("user", pergunta);
 
       const busto = document.getElementById("busto").value;
       const cintura = document.getElementById("cintura").value;
       const quadril = document.getElementById("quadril").value;
+
       const resposta = await fetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ busto, cintura, quadril, url: urlProduto, message: pergunta })
       }).then(r => r.json());
 
-      const botDiv = document.createElement('div');
-      botDiv.className = 'msg bot';
-      botDiv.innerText = resposta.resposta;
-      addMsgElement(botDiv);
-
+      addMsg("bot", resposta.resposta);
       document.getElementById("pergunta").value = "";
     }
   </script>
