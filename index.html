@@ -112,7 +112,7 @@
 
     <!-- BOTÃO -->
     <div style="padding: 4px 8px;">
-      <button onclick="enviarMedidas()" style="width: 100%; height: 30px; background: #000; color: #fff; font-size: 12px; font-weight: bold; border: none; border-radius: 6px;">ENVIAR MEDIDAS</button>
+      <button onclick="enviarMedidas()" style="width: 100%; height: 30px; background: #000; color: #fff; font-size: 12px; font-weight: bold; border: none; border-radius: 6px;"><strong>ENVIAR MEDIDAS</strong></button>
     </div>
 
     <!-- DÚVIDA -->
@@ -162,13 +162,16 @@
         body: JSON.stringify({ busto, cintura, quadril, url: urlProduto })
       }).then(r => r.json());
 
-      // Atualiza tarja preta
+      // Atualiza tarja preta (já em strong)
       document.getElementById('provador-tamanho').innerText = resposta.resposta;
 
-      // Mensagem complementar
+      // Mensagem complementar com partes em negrito
       const botDiv = document.createElement('div');
       botDiv.className = 'msg bot';
-      botDiv.innerText = resposta.complemento;
+      botDiv.innerHTML = `
+        Você está prestes para arrasar com o <strong>${resposta.nomeProduto}</strong> no tamanho <strong>${resposta.resposta}</strong>!<br>
+        Seu cupom exclusivo: <strong>TAM${resposta.resposta}</strong>
+      `;
       addMsgElement(botDiv);
     }
 
