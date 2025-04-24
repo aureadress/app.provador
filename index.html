@@ -43,17 +43,17 @@
       line-height: 1.2;
     }
     #faixa .banner-text {
-      font-weight: 400; /* texto normal */
+      font-weight: 400;
       text-transform: uppercase;
     }
     #faixa .banner-size {
       margin-top: 4px;
-      font-weight: 400; /* texto normal */
+      font-weight: 400;
     }
     #faixa .banner-size strong {
       font-size: 20px;
       display: block;
-      font-weight: bold; /* tamanho destacado */
+      font-weight: bold;
     }
     /* Mensagens de chat: texto normal, apenas <strong> em negrito */
     .msg {
@@ -158,23 +158,26 @@
       `;
       addMsgElement(medidaDiv);
 
-      // Requisição única para obter tamanho e complemento
-      const resposta = await fetch("/chat", {
+      // Primeiro fetch para obter tamanho
+      const resposta1 = await fetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ busto, cintura, quadril, url: urlProduto })
       }).then(r => r.json());
 
-      // Atualiza tarja preta (já em strong)
-      document.getElementById('provador-tamanho').innerText = resposta.resposta;
+      // Atualiza tarja preta
+      document.getElementById('provador-tamanho').innerText = resposta1.resposta;
 
-      // Mensagem complementar com partes em negrito
+      // Segundo fetch para obter texto complementar com nome do produto
+      const resposta2 = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ busto, cintura, quadril, url: urlProduto, message: "Qual tamanho ideal?" })
+      }).then(r => r.json());
+
       const botDiv = document.createElement('div');
       botDiv.className = 'msg bot';
-      botDiv.innerHTML = `
-        Você está prestes para arrasar com o <strong>${resposta.nomeProduto}</strong> no tamanho <strong>${resposta.resposta}</strong>!<br>
-        Seu cupom exclusivo: <strong>TAM${resposta.resposta}</strong>
-      `;
+      botDiv.innerHTML = resposta2.resposta;
       addMsgElement(botDiv);
     }
 
