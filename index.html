@@ -32,6 +32,7 @@
       border-radius: 0 0 8px 8px;
       text-align: center;
     }
+
     /* Tarja preta */
     #faixa {
       background-color: #000;
@@ -53,12 +54,14 @@
       display: block;
       font-weight: bold;
     }
+
     /* Mensagens de chat */
     .msg {
       padding: 10px;
       border-radius: 10px;
       margin-bottom: 10px;
       max-width: 90%;
+      font-weight: normal; /* reset */
     }
     .msg.user {
       background: #e0e0e0;
@@ -79,9 +82,11 @@
 
     <!-- TOPO -->
     <div style="background:#000; text-align:center; padding:12px; position:relative;">
-      <img src="https://cdn.dooca.store/161300/files/inteligente-1-1.png?v=1744597262" alt="logo" style="height:69px; width:196px;" />
-      <button onclick="window.parent.postMessage('fechar-widget','*')" style="position:absolute; top:12px; right:12px; background:transparent; border:none; cursor:pointer; width:32px; height:32px;">
-        <!-- ícone fechar -->
+      <img src="https://cdn.dooca.store/161300/files/inteligente-1-1.png?v=1744597262"
+           alt="logo"
+           style="height:69px; width:196px;" />
+      <button onclick="window.parent.postMessage('fechar-widget','*')"
+              style="position:absolute; top:12px; right:12px; background:transparent; border:none; cursor:pointer; width:32px; height:32px;">
         <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
           <circle cx="16" cy="16" r="15" fill="white" stroke="black" stroke-width="2"/>
           <path d="M11 11L21 21" stroke="black" stroke-width="2.5" stroke-linecap="round"/>
@@ -91,7 +96,9 @@
     </div>
 
     <!-- CHAT -->
-    <div id="chat" style="flex:1; padding:8px; font-size:13px; overflow-y:auto; background:#eaeaea; display:flex; flex-direction:column;"></div>
+    <div id="chat"
+         style="flex:1; padding:8px; font-size:13px; overflow-y:auto; background:#eaeaea; display:flex; flex-direction:column;">
+    </div>
 
     <!-- TARJA -->
     <div id="faixa">
@@ -117,15 +124,22 @@
 
     <!-- BOTÃO -->
     <div style="padding:4px 8px;">
-      <button onclick="enviarMedidas()" style="width:100%; height:30px; background:#000; color:#fff; border:none; border-radius:6px;">
+      <button onclick="enviarMedidas()"
+              style="width:100%; height:30px; background:#000; color:#fff; border:none; border-radius:6px;">
         <strong>ENVIAR MEDIDAS</strong>
       </button>
     </div>
 
     <!-- DÚVIDA -->
     <div style="display:flex; padding:6px 12px;">
-      <input id="pergunta" type="text" placeholder="Digite sua dúvida..." style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc;">
-      <button onclick="enviarPergunta()" style="width:44px; height:44px; background:#000; color:#fff; border:none; border-radius:8px; margin-left:8px; font-size:18px;">➤</button>
+      <input id="pergunta"
+             type="text"
+             placeholder="Digite sua dúvida..."
+             style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc;">
+      <button onclick="enviarPergunta()"
+              style="width:44px; height:44px; background:#000; color:#fff; border:none; border-radius:8px; margin-left:8px; font-size:18px;">
+        ➤
+      </button>
     </div>
 
     <!-- RODAPÉ -->
@@ -136,8 +150,8 @@
 
   <script>
     const chat = document.getElementById("chat");
-    const faixa = document.getElementById("faixa");
-    const urlProduto = new URLSearchParams(location.search).get("url") || location.href;
+    const urlParams = new URLSearchParams(location.search);
+    const urlProduto = urlParams.get("url") || location.href;
 
     function addMsg(el) {
       chat.appendChild(el);
@@ -149,40 +163,38 @@
       const cintura = document.getElementById("cintura").value;
       const quadril = document.getElementById("quadril").value;
 
-      // mostra medidas do usuário
+      // mostra medidas do usuário (apenas números em negrito)
       const userDiv = document.createElement("div");
       userDiv.className = "msg user";
       userDiv.innerHTML = `
         <div>Minhas medidas são:</div>
-        <div><strong>${busto}</strong> cm de <strong>Busto</strong></div>
-        <div><strong>${cintura}</strong> cm de <strong>Cintura</strong></div>
-        <div><strong>${quadril}</strong> cm de <strong>Quadril</strong></div>
+        <div><strong>${busto}</strong> cm de Busto</div>
+        <div><strong>${cintura}</strong> cm de Cintura</div>
+        <div><strong>${quadril}</strong> cm de Quadril</div>
       `;
       addMsg(userDiv);
 
-      // consulta o servidor
+      // requisição ao servidor
       const resp = await fetch("/chat", {
         method: "POST",
-        headers: {"Content-Type":"application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ busto, cintura, quadril, url: urlProduto })
       }).then(r => r.json());
 
-      const tamanho = resp.resposta;         // ex: "38"
-      const nomeVestido = resp.nomeProduto;  // servidor deve retornar este campo
+      const tamanho = resp.resposta;          // ex: "42"
+      const nomeVestido = resp.nomeProduto;   // deve vir do servidor
       const cupom = "TAM" + tamanho;
 
-      // atualiza tarja preta
+      // preenche tarja preta
       document.getElementById("provador-tamanho").innerText = tamanho;
 
-      // nova mensagem de celebração
+      // mensagem de celebração (negrito só em nome, número e cupom)
       const botDiv = document.createElement("div");
       botDiv.className = "msg bot";
       botDiv.innerHTML = `
-        Você está prestes para arrasar com o <strong>${nomeVestido}</strong>  
-        no tamanho <strong>${tamanho}</strong>!<br>
+        Você está prestes para arrasar com o <strong>${nomeVestido}</strong> no tamanho <strong>${tamanho}</strong>!<br>
         Para facilitar essa decisão, liberei um cupom especial para você:<br>
-        Código do Cupom: <strong>${cupom}</strong> — use na finalização da compra  
-        e aproveite o desconto. Corre que é por tempo limitado!
+        Código do Cupom: <strong>${cupom}</strong> — use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!
       `;
       addMsg(botDiv);
     }
@@ -202,7 +214,7 @@
 
       const resp = await fetch("/chat", {
         method: "POST",
-        headers: {"Content-Type":"application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ busto, cintura, quadril, url: urlProduto, message: pergunta })
       }).then(r => r.json());
 
