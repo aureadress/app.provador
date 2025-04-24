@@ -75,17 +75,6 @@
       align-self: flex-start;
       text-align: left;
     }
-    /* Container para mensagem complementar */
-    #complemento {
-      padding: 10px;
-      font-size: 13px;
-      font-weight: 400;
-      color: #fff;
-      background: #333;
-      border-radius: 10px;
-      margin: 8px 12px;
-      text-align: center;
-    }
   </style>
 </head>
 <body style="margin:0; padding:0; background-color:#f5f5f5; font-family: Montserrat, sans-serif;">
@@ -101,9 +90,6 @@
 
     <!-- CHAT -->
     <div id="chat" style="flex: 1; padding: 8px; font-size: 13px; overflow-y: auto; background: #eaeaea; display: flex; flex-direction: column;"></div>
-
-    <!-- COMPLEMENTO -->
-    <div id="complemento"></div>
 
     <!-- TARJA -->
     <div id="faixa">
@@ -147,7 +133,6 @@
   <!-- SCRIPT FUNCIONAL -->
   <script>
     const chat = document.getElementById("chat");
-    const complementoEl = document.getElementById("complemento");
     const faixa = document.getElementById("faixa");
     const urlParams = new URLSearchParams(window.location.search);
     const urlProduto = urlParams.get("url") || window.location.href;
@@ -190,7 +175,10 @@
         body: JSON.stringify({ busto, cintura, quadril, url: urlProduto, message: "Qual tamanho ideal?" })
       }).then(r => r.json());
 
-      complementoEl.innerHTML = resposta2.resposta;
+      const botDiv = document.createElement('div');
+      botDiv.className = 'msg bot';
+      botDiv.innerHTML = resposta2.resposta;
+      addMsgElement(botDiv);
     }
 
     async function enviarPergunta() {
