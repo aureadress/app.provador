@@ -12,13 +12,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Servir arquivos estáticos
+// Servir arquivos estáticos (a pasta onde estão index.html e widget.js)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname);
 app.use(express.static(rootDir));
 
-// Rota principal
+// Rota principal: serve o widget
 app.get('/', (req, res) => {
   res.sendFile(path.join(rootDir, 'index.html'));
 });
@@ -109,10 +109,8 @@ Indique apenas o número do tamanho ideal (36–58).
     });
 
     const tamanhoIdeal = sizeCompletion.choices[0].message.content.trim();
-
     const cupom = `TAM${tamanhoIdeal}`;
-    const complemento = `Você está prestes para arrasar com o **${nomeProduto}** no tamanho **${tamanhoIdeal}**! Para facilitar, liberei um cupom especial:
-**Código do Cupom: ${cupom}** — use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!`;
+    const complemento = `Você está prestes para arrasar com o **${nomeProduto}** no tamanho **${tamanhoIdeal}**! Para facilitar, liberei um cupom especial:\n**Código do Cupom: ${cupom}** — use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!`;
 
     return res.json({
       resposta: tamanhoIdeal,
