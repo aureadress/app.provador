@@ -5,17 +5,9 @@
   <meta name="viewport" content="width=380, initial-scale=1.0" />
   <title>Provador Inteligente</title>
   <style>
-    /* Fonte padrão não negrito para texto normal */
-    #widget-provador, #widget-provador * {
-      font-weight: 400 !important;
-    }
-    /* Garantir que strong fique em negrito */
-    #widget-provador strong {
-      font-weight: 600 !important;
-    }
     body, input, button {
       font-family: 'Montserrat', sans-serif;
-      font-weight: 400;
+      font-weight: 600;
     }
     input, button {
       font-size: 14px;
@@ -26,7 +18,7 @@
       background-color: #000;
       color: #fff;
       font-size: 10px;
-      font-weight: 400;
+      font-weight: bold;
       border-radius: 8px 8px 0 0;
       display: flex;
       align-items: center;
@@ -40,19 +32,32 @@
       border-radius: 0 0 8px 8px;
       text-align: center;
     }
-    /* Tarja com tamanho e número em negrito */
+    /* Negrito geral para <strong> */
+    #widget-provador strong {
+      font-weight: bold;
+    }
+    /* Estilos para tarja e números em negrito */
     #faixa {
       background-color: #000;
       color: #fff;
       text-align: center;
       font-size: 11px;
+      font-weight: bold;
       padding: 8px 4px;
       line-height: 1.2;
     }
-    #faixa strong {
-      font-size: 20px;
+    #faixa .banner-text {
+      text-transform: uppercase;
     }
-    /* Mensagens */
+    #faixa .banner-size {
+      margin-top: 4px;
+    }
+    #faixa .banner-size strong {
+      font-size: 20px;
+      display: block;
+      font-weight: bold;
+    }
+    /* Mensagens de chat */
     .msg {
       padding: 10px;
       border-radius: 10px;
@@ -73,69 +78,68 @@
     }
   </style>
 </head>
-<body style="margin:0; padding:0; background-color:#f5f5f5;">
-  <div id="widget-provador" style="width:380px; height:570px; background-color:#f2f2f2; border-radius:8px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 2px 8px rgba(0,0,0,0.16); position:relative;">
+<body style="margin:0; padding:0; background-color:#f5f5f5; font-family: Montserrat, sans-serif;">
+  <div id="widget-provador" style="width: 380px; height: 570px; background-color: #f2f2f2; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(0,0,0,0.16); position: relative;">
 
     <!-- TOPO -->
-    <div style="background-color:#000; text-align:center; padding:12px; position:relative;">
-      <img src="https://cdn.dooca.store/161300/files/inteligente-1-1.png?v=1744597262" alt="logo" style="height:69px; width:196px;" />
-      <button onclick="window.parent.postMessage('fechar-widget','*')" style="position:absolute; top:12px; right:12px; background:transparent; border:none; cursor:pointer; width:32px; height:32px;">
+    <div style="background-color: #000; text-align: center; padding: 12px; position: relative;">
+      <img src="https://cdn.dooca.store/161300/files/inteligente-1-1.png?v=1744597262" alt="logo" style="height: 69px; width: 196px;" />
+      <button onclick="window.parent.postMessage('fechar-widget', '*')" style="position: absolute; top: 12px; right: 12px; background: transparent; border: none; cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
         <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="15" fill="white" stroke="black" stroke-width="2"/><path d="M11 11L21 21" stroke="black" stroke-width="2.5" stroke-linecap="round"/><path d="M11 21L21 11" stroke="black" stroke-width="2.5" stroke-linecap="round"/></svg>
       </button>
     </div>
 
     <!-- CHAT -->
-    <div id="chat" style="flex:1; padding:8px; font-size:13px; overflow-y:auto; background:#eaeaea; display:flex; flex-direction:column;"></div>
+    <div id="chat" style="flex: 1; padding: 8px; font-size: 13px; overflow-y: auto; background: #eaeaea; display: flex; flex-direction: column;"></div>
 
     <!-- TARJA -->
     <div id="faixa">
-      COM BASE NAS MEDIDAS ABAIXO, O TAMANHO IDEAL É<br>
-      <strong id="provador-tamanho"></strong>
+      <div class="banner-text">COM BASE NAS MEDIDAS ABAIXO, O TAMANHO IDEAL É</div>
+      <div class="banner-size"><strong id="provador-tamanho"></strong></div>
     </div>
 
     <!-- INPUTS -->
-    <div style="display:flex; justify-content:space-between; padding:5px 5px 0 5px; gap:5px;">
-      <div style="display:flex; flex-direction:column; align-items:center;">
+    <div style="display: flex; justify-content: space-between; padding: 5px 5px 0 5px; gap: 5px;">
+      <div style="display: flex; flex-direction: column; align-items: center;">
         <div class="label-box">BUSTO</div>
         <input id="busto" type="number" placeholder="busto (cm)" class="input-box">
       </div>
-      <div style="display:flex; flex-direction:column; align-items:center;">
+      <div style="display: flex; flex-direction: column; align-items: center;">
         <div class="label-box">CINTURA</div>
         <input id="cintura" type="number" placeholder="cintura (cm)" class="input-box">
       </div>
-      <div style="display:flex; flex-direction:column; align-items:center;">
+      <div style="display: flex; flex-direction: column; align-items: center;">
         <div class="label-box">QUADRIL</div>
         <input id="quadril" type="number" placeholder="quadril (cm)" class="input-box">
       </div>
     </div>
 
     <!-- BOTÃO -->
-    <div style="padding:4px 8px;">
-      <button onclick="enviarMedidas()" style="width:100%; height:30px; background:#000; color:#fff; font-size:12px; border:none; border-radius:6px;">ENVIAR MEDIDAS</button>
+    <div style="padding: 4px 8px;">
+      <button onclick="enviarMedidas()" style="width: 100%; height: 30px; background: #000; color: #fff; font-size: 12px; font-weight: bold; border: none; border-radius: 6px;"><strong>ENVIAR MEDIDAS</strong></button>
     </div>
 
     <!-- DÚVIDA -->
-    <div style="display:flex; padding:6px 12px;">
-      <input id="pergunta" type="text" placeholder="Digite sua dúvida..." style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc;">
-      <button onclick="enviarPergunta()" style="width:44px; height:44px; background:#000; color:#fff; font-size:18px; border:none; border-radius:8px; margin-left:8px;">➤</button>
+    <div style="display: flex; padding: 6px 12px;">
+      <input id="pergunta" type="text" placeholder="Digite sua dúvida..." style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+      <button onclick="enviarPergunta()" style="width: 44px; height: 44px; background: #000; color: white; font-size: 18px; border-radius: 8px; border: none; margin-left: 8px;">➤</button>
     </div>
 
     <!-- RODAPÉ -->
-    <div style="background:#000; color:#fff; font-size:10px; text-align:center; padding:6px;">
+    <div style="background: #000; color: white; font-size: 10px; text-align: center; padding: 6px; font-weight: bold;">
       TECNOLOGIA PROVADOR INTELIGENTE
     </div>
   </div>
 
-  <!-- SCRIPT -->
+  <!-- SCRIPT FUNCIONAL -->
   <script>
     const chat = document.getElementById("chat");
-    const urlProduto = new URLSearchParams(window.location.search).get("url") || window.location.href;
+    const faixa = document.getElementById("faixa");
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlProduto = urlParams.get("url") || window.location.href;
 
-    function addMsg(tipo, html) {
-      const div = document.createElement("div");
-      div.className = "msg " + tipo;
-      div.innerHTML = html;
-      chat.appendChild(div);
+    function addMsgElement(element) {
+      chat.appendChild(element);
       chat.scrollTop = chat.scrollHeight;
     }
 
@@ -143,38 +147,65 @@
       const busto = document.getElementById("busto").value;
       const cintura = document.getElementById("cintura").value;
       const quadril = document.getElementById("quadril").value;
-      addMsg("user", `Minhas medidas são: Busto <strong>${busto}</strong> cm, Cintura <strong>${cintura}</strong> cm, Quadril <strong>${quadril}</strong> cm`);
 
-      const res = await fetch("/chat", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
+      const medidaDiv = document.createElement('div');
+      medidaDiv.className = 'msg user';
+      medidaDiv.innerHTML = `
+        <div>Minhas medidas são:</div>
+        <div><strong>${busto}</strong> cm</div>
+        <div><strong>${cintura}</strong> cm</div>
+        <div><strong>${quadril}</strong> cm</div>
+      `;
+      addMsgElement(medidaDiv);
+
+      const response = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ busto, cintura, quadril, url: urlProduto })
-      }).then(r => r.json());
+      });
 
-      document.getElementById("provador-tamanho").innerHTML = `<strong>${res.resposta}</strong>`;
-
-      let complemento = res.complemento || "";
-      complemento = complemento.replace(/^['"]|['"]$/g, "");
-      complemento = complemento.replace(/(Vestido[\s\S]*?)\s*,?\s*tamanho\s*(\d+)/i,
-        `<strong>$1</strong> tamanho <strong>$2</strong>`
+      const res = await response.json();
+      let complemento = res.complemento || '';
+      // remove aspas envolventes
+      complemento = complemento.replace(/^['"]|['"]$/g, '');
+      // realça apenas o nome do vestido e o número do tamanho
+      complemento = complemento.replace(/(Vestido[\s\S]*?)\s+no\s+tamanho\s+(\d+)/i,
+        `<strong>$1</strong> no tamanho <strong>$2</strong>`
       );
-      addMsg("bot", complemento);
+
+      // atualiza tarja com tamanho recomendado em negrito
+      document.getElementById('provador-tamanho').innerHTML = `<strong>${res.resposta}</strong>`;
+
+      const botDiv = document.createElement('div');
+      botDiv.className = 'msg bot';
+      botDiv.innerHTML = complemento;
+      addMsgElement(botDiv);
     }
 
     async function enviarPergunta() {
-      const msg = document.getElementById("pergunta").value.trim();
-      if (!msg) return;
-      addMsg("user", msg);
-      const busto = document.getElementById("busto").value;
-      const cintura = document.getElementById("cintura").value;
-      const quadril = document.getElementById("quadril").value;
-      const res = await fetch("/chat", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ busto, cintura, quadril, url: urlProduto, message: msg })
-      }).then(r => r.json());
-      addMsg("bot", res.resposta);
-      document.getElementById("pergunta").value = "";
+      const pergunta = document.getElementById('pergunta').value;
+      if (!pergunta.trim()) return;
+      const userDiv = document.createElement('div');
+      userDiv.className = 'msg user';
+      userDiv.innerText = pergunta;
+      addMsgElement(userDiv);
+
+      const busto = document.getElementById('busto').value;
+      const cintura = document.getElementById('cintura').value;
+      const quadril = document.getElementById('quadril').value;
+      const response = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ busto, cintura, quadril, url: urlProduto, message: pergunta })
+      });
+      const res = await response.json();
+
+      const botDiv = document.createElement('div');
+      botDiv.className = 'msg bot';
+      botDiv.innerText = res.resposta;
+      addMsgElement(botDiv);
+
+      document.getElementById('pergunta').value = '';
     }
   </script>
 </body>
