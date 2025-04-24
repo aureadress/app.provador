@@ -116,7 +116,7 @@
 
     <!-- BOTÃO -->
     <div style="padding: 4px 8px;">
-      <button onclick="enviarMedidas()" style="width: 100%; height: 30px; background: #000; color: #fff; font-size: 12px; font-weight: bold; border: none; border-radius: 6px;"><strong>ENVIAR MEDIDAS</strong></button>
+      <button onclick="enviarMedidas()" style="width: 100%; height: 30px; background: #000; color: #fff; font-size: 12px; border: none; border-radius: 6px;"><strong>ENVIAR MEDIDAS</strong></button>
     </div>
 
     <!-- DÚVIDA -->
@@ -152,9 +152,9 @@
       medidaDiv.className = 'msg user';
       medidaDiv.innerHTML = `
         <div>Minhas medidas são:</div>
-        <div><strong>${busto}</strong> cm</div>
-        <div><strong>${cintura}</strong> cm</div>
-        <div><strong>${quadril}</strong> cm</div>
+        <div><strong>Busto:</strong> <strong>${busto}</strong> cm</div>
+        <div><strong>Cintura:</strong> <strong>${cintura}</strong> cm</div>
+        <div><strong>Quadril:</strong> <strong>${quadril}</strong> cm</div>
       `;
       addMsgElement(medidaDiv);
 
@@ -163,18 +163,17 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ busto, cintura, quadril, url: urlProduto })
       });
-
       const res = await response.json();
-      let complemento = res.complemento || '';
-      // remove aspas envolventes
-      complemento = complemento.replace(/^['"]|['"]$/g, '');
-      // realça apenas o nome do vestido e o número do tamanho
-      complemento = complemento.replace(/(Vestido[\s\S]*?)\s+no\s+tamanho\s+(\d+)/i,
-        `<strong>$1</strong> no tamanho <strong>$2</strong>`
-      );
 
-      // atualiza tarja com tamanho recomendado em negrito
+      // Atualiza tarja com tamanho recomendado em negrito
       document.getElementById('provador-tamanho').innerHTML = `<strong>${res.resposta}</strong>`;
+
+      // Extrai o nome do vestido fixo até antes de "tamanho"
+      const nomeMatch = res.complemento.match(/^(Vestido[\s\S]*?) tamanho/i);
+      const nomeVestido = nomeMatch ? nomeMatch[1].trim() : '';
+
+      // Mensagem de parabéns fixa sem aspas
+      const complemento = `Parabéns pela escolha do <strong>${nomeVestido}</strong> no tamanho <strong>${res.resposta}</strong>!`;
 
       const botDiv = document.createElement('div');
       botDiv.className = 'msg bot';
