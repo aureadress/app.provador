@@ -55,29 +55,22 @@
     }
     /* Mensagens de chat */
     .msg {
-      font-weight: normal;
       padding: 10px;
       border-radius: 10px;
       margin-bottom: 10px;
       max-width: 90%;
     }
     .msg.user {
-      /* usuário em fundo escuro */
-      background-color: #333;
-      color: #fff;
+      background: #e0e0e0;
+      color: #000;
       align-self: flex-end;
       text-align: left;
     }
     .msg.bot {
-      /* bot em fundo claro */
-      background-color: #e0e0e0;
-      color: #000;
+      background: #333;
+      color: #fff;
       align-self: flex-start;
       text-align: left;
-    }
-    /* destaca apenas strong */
-    strong {
-      font-weight: bold;
     }
   </style>
 </head>
@@ -154,9 +147,9 @@
       medidaDiv.className = 'msg user';
       medidaDiv.innerHTML = `
         <div>Minhas medidas são:</div>
-        <div>Busto: <strong>${busto}</strong> cm</div>
-        <div>Cintura: <strong>${cintura}</strong> cm</div>
-        <div>Quadril: <strong>${quadril}</strong> cm</div>
+        <div><strong>Busto:</strong> <strong>${busto}</strong> cm</div>
+        <div><strong>Cintura:</strong> <strong>${cintura}</strong> cm</div>
+        <div><strong>Quadril:</strong> <strong>${quadril}</strong> cm</div>
       `;
       addMsgElement(medidaDiv);
 
@@ -170,7 +163,7 @@
 
       const botDiv = document.createElement('div');
       botDiv.className = 'msg bot';
-      botDiv.innerHTML = resposta.complemento;
+      botDiv.innerText = resposta.complemento;
       addMsgElement(botDiv);
     }
 
@@ -183,19 +176,19 @@
       userDiv.innerText = pergunta;
       addMsgElement(userDiv);
 
-      const busto = document.getElementById("busto");
-      const cintura = document.getElementById("cintura");
-      const quadril = document.getElementById("quadril");
+      const busto = document.getElementById("busto").value;
+      const cintura = document.getElementById("cintura").value;
+      const quadril = document.getElementById("quadril").value;
 
       const resposta = await fetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ busto: busto.value, cintura: cintura.value, quadril: quadril.value, url: urlProduto, message: pergunta })
+        body: JSON.stringify({ busto, cintura, quadril, url: urlProduto, message: pergunta })
       }).then(r => r.json());
 
       const botDiv = document.createElement('div');
       botDiv.className = 'msg bot';
-      botDiv.innerHTML = resposta.resposta;
+      botDiv.innerText = resposta.resposta;
       addMsgElement(botDiv);
 
       document.getElementById("pergunta").value = "";
