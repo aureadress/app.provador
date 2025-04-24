@@ -43,25 +43,22 @@
       line-height: 1.2;
     }
     #faixa .banner-text {
-      font-weight: 400;
       text-transform: uppercase;
     }
     #faixa .banner-size {
       margin-top: 4px;
-      font-weight: 400;
     }
     #faixa .banner-size strong {
       font-size: 20px;
       display: block;
       font-weight: bold;
     }
-    /* Mensagens de chat: texto normal, apenas <strong> em negrito */
+    /* Mensagens de chat */
     .msg {
       padding: 10px;
       border-radius: 10px;
       margin-bottom: 10px;
       max-width: 90%;
-      font-weight: 400;
     }
     .msg.user {
       background: #e0e0e0;
@@ -115,7 +112,7 @@
 
     <!-- BOTÃO -->
     <div style="padding: 4px 8px;">
-      <button onclick="enviarMedidas()" style="width: 100%; height: 30px; background: #000; color: #fff; font-size: 12px; border: none; border-radius: 6px;"><strong>ENVIAR MEDIDAS</strong></button>
+      <button onclick="enviarMedidas()" style="width: 100%; height: 30px; background: #000; color: #fff; font-size: 12px; font-weight: bold; border: none; border-radius: 6px;">ENVIAR MEDIDAS</button>
     </div>
 
     <!-- DÚVIDA -->
@@ -130,7 +127,6 @@
     </div>
   </div>
 
-  <!-- SCRIPT FUNCIONAL -->
   <script>
     const chat = document.getElementById("chat");
     const faixa = document.getElementById("faixa");
@@ -147,45 +143,34 @@
       const cintura = document.getElementById("cintura").value;
       const quadril = document.getElementById("quadril").value;
 
-      // Empilha as medidas com apenas números em negrito
       const medidaDiv = document.createElement('div');
       medidaDiv.className = 'msg user';
       medidaDiv.innerHTML = `
         <div>Minhas medidas são:</div>
-        <div>Busto: <strong>${busto}</strong> cm</div>
-        <div>Cintura: <strong>${cintura}</strong> cm</div>
-        <div>Quadril: <strong>${quadril}</strong> cm</div>
+        <div><strong>Busto:</strong> <strong>${busto}</strong> cm</div>
+        <div><strong>Cintura:</strong> <strong>${cintura}</strong> cm</div>
+        <div><strong>Quadril:</strong> <strong>${quadril}</strong> cm</div>
       `;
       addMsgElement(medidaDiv);
 
-      // Fetch para obter somente o tamanho recomendado
-      const resposta1 = await fetch("/chat", {
+      const resposta = await fetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ busto, cintura, quadril, url: urlProduto })
       }).then(r => r.json());
 
-      const tamanho = resposta1.resposta;
+      document.getElementById('provador-tamanho').innerText = resposta.resposta;
 
-      // Atualiza tarja preta
-      document.getElementById('provador-tamanho').innerText = tamanho;
-
-      // *** Mensagem complementar fixa, conforme solicitado ***
-      // Substitua 'Nome do Vestido' pela variável real se tiver acesso ao nome do produto.
-      const nomeVestido = 'Nome do Vestido';
       const botDiv = document.createElement('div');
       botDiv.className = 'msg bot';
-      botDiv.innerHTML = `
-        Você está prestes para arrasar com o <strong>${nomeVestido}</strong> no tamanho <strong>${tamanho}</strong>!<br>
-        Para facilitar essa decisão, liberei um cupom especial para você:<br>
-        Código do Cupom: <strong>TAM${tamanho}</strong> — use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!
-      `;
+      botDiv.innerText = resposta.complemento;
       addMsgElement(botDiv);
     }
 
     async function enviarPergunta() {
       const pergunta = document.getElementById("pergunta").value;
       if (!pergunta.trim()) return;
+
       const userDiv = document.createElement('div');
       userDiv.className = 'msg user';
       userDiv.innerText = pergunta;
@@ -194,6 +179,7 @@
       const busto = document.getElementById("busto").value;
       const cintura = document.getElementById("cintura").value;
       const quadril = document.getElementById("quadril").value;
+
       const resposta = await fetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -207,6 +193,16 @@
 
       document.getElementById("pergunta").value = "";
     }
+
+    // Fecha o widget ao receber mensagem do iframe
+    window.addEventListener("message", function (event) {
+      if (event.data === "fechar-widget") {
+        const iframe = document.getElementById("iframe-provador");
+        const overlay = document.getElementById("overlay-fundo");
+        if (iframe) document.body.removeChild(iframe);
+        if (overlay) document.body.removeChild(overlay);
+      }
+    });
   </script>
 </body>
 </html>
