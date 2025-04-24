@@ -107,6 +107,7 @@ Você é assistente de vendas de moda. Com base nestas medidas da cliente:
 - Quadril: ${quadril} cm
 E na tabela de medidas JSON: ${JSON.stringify(tabelaMedidas)}
 Indique apenas o número do tamanho ideal (36–58).
+Nunca envie a tabela de medidas na tela do chat, apenas respostas caso seja questionado tamanhos disponível.
 `;
 
     const sizeCompletion = await openai.chat.completions.create({
