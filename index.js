@@ -66,20 +66,79 @@ app.post('/chat', async (req, res) => {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     if (message) {
-      const prompt = `Você é um vendedor especialista da loja Exclusive Dress.\n\nCom base nas informações abaixo:\n\n⭐ Nome do produto: ${nomeProduto}\n📜 Descrição: ${descricao}\n📏 Tabela de medidas (como array):\n${JSON.stringify(tabelaMedidas, null, 2)}\n🎨 Cores disponíveis: ${cores.join(', ')}\n\nResponda à seguinte pergunta da cliente:\n"${message}"\n\nSe for dúvida sobre tamanho, informe que ela já inseriu as medidas.\nSe for dúvida sobre entrega, oriente a inserir o CEP na página do produto.\nSe for dúvida sobre troca, devolução ou contato, envie os links: /trocas /contato.`;
+      // Lógica de resposta a dúvidas gerais
+      const promptGeral = `Você é um vendedor especialista da loja Exclusive Dress.
+
+Com base nas informações abaixo:
+
+⭐ Nome do produto: ${nomeProduto}
+📜 Descrição: ${descricao}
+📏 Tabela de medidas (como array):
+${JSON.stringify(tabelaMedidas, null, 2)}
+🎨 Cores disponíveis: ${cores.join(', ')}
+
+Responda à seguinte pergunta da cliente:
+"${message}"
+
+Se for dúvida sobre tamanho, informe que ela já inseriu as medidas.
+Se for dúvida sobre entrega, oriente a inserir o CEP na página do produto.
+Se for dúvida sobre troca, devolução ou contato, envie os links: /trocas /contato.`;
 
       const resposta = await openai.chat.completions.create({
         model: 'gpt-4',
         messages: [
           { role: 'system', content: 'Responda como um atendente simpático da loja Exclusive Dress. Seja direto, sem emojis.' },
-          { role: 'user', content: prompt }
+          { role: 'user', content: promptGeral }
         ]
       });
 
       return res.json({ resposta: resposta.choices[0].message.content });
     }
 
-    const prompt = `Com base nas medidas da cliente:\n- Busto: ${busto} cm\n- Cintura: ${cintura} cm\n- Quadril: ${quadril} cm\n\nE nas informações da página do produto abaixo:\n\n⭐ Nome do produto: ${nomeProduto}\n📜 Descrição: ${descricao}\n📏 Tabela de medidas (como array):\n${JSON.stringify(tabelaMedidas, null, 2)}\n🎨 Cores disponíveis: ${cores.join(', ')}\n\nResponda apenas com o número do tamanho ideal entre 36 e 58. Sem nenhum outro texto.`;
+    // Lógica de recomendação de tamanho com fórmula avançada
+    const prompt = `
+Você é um assistente de vendas especialista em vestuário. Para recomendar o tamanho ideal:
+
+0. Identifique o “modelo” do vestido no texto da descrição (case-insensitive):
+   • Se encontrar “EVASE”, “EVASÊ”, “Evasê”, “Evase” ou “evase”: MODELO = EVASÊ.
+   • Senão, se encontrar “SEREIA”, “sereia” ou qualquer variação: MODELO = SEREIA.
+   • Senão:
+     – Se a tabela de medidas tiver somente Busto e Cintura: MODELO = EVASÊ.
+     – Se a tabela tiver Busto, Cintura e Quadril: MODELO = SEREIA.
+
+1. Conversão de intervalos (para cada tamanho da tabela):
+   • Se o valor vier como “min-max” ou “min/max”, use {min, max}.
+   • Se vier apenas “X”:
+     – Se não for o último tamanho, defina max = próximo min da tabela.
+     – Se for o último, defina max = X + 6 cm.
+
+2. Distância da medida ao intervalo:
+   • Se a medida da cliente estiver dentro do intervalo: distância = 0.
+   • Caso contrário: distância = diferença até o limite mais próximo.
+
+3. Cálculo de pontuação:
+   • Se MODELO = EVASÊ ou não houver coluna de Quadril:
+     pontuação = 0.85 × distância_busto + 0.15 × distância_cintura.
+   • Se MODELO = SEREIA:
+     pontuação = 0.60 × distância_busto + 0.10 × distância_cintura + 0.40 × distância_quadril.
+
+4. Seleção do tamanho:
+   • Escolha o tamanho com menor pontuação.
+   • Se MODELO = SEREIA, após escolher, subtraia 1 desse valor (se não houver tamanho menor, mantenha o valor original).
+
+5. **Responda APENAS** com o número do tamanho ideal (entre 36 e 58).
+
+Dados da cliente:
+- Busto: ${busto} cm
+- Cintura: ${cintura} cm
+- Quadril: ${quadril} cm
+
+Informações do produto:
+⭐ Nome do produto: ${nomeProduto}
+📜 Descrição: ${descricao}
+📏 Tabela de medidas (como array):
+${JSON.stringify(tabelaMedidas, null, 2)}
+🎨 Cores disponíveis: ${cores.join(', ')}`;
 
     const resposta = await openai.chat.completions.create({
       model: 'gpt-4',
