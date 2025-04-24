@@ -158,26 +158,28 @@
       `;
       addMsgElement(medidaDiv);
 
-      // Primeiro fetch para obter tamanho
+      // Fetch para obter somente o tamanho recomendado
       const resposta1 = await fetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ busto, cintura, quadril, url: urlProduto })
       }).then(r => r.json());
 
+      const tamanho = resposta1.resposta;
+
       // Atualiza tarja preta
-      document.getElementById('provador-tamanho').innerText = resposta1.resposta;
+      document.getElementById('provador-tamanho').innerText = tamanho;
 
-      // Segundo fetch para obter texto complementar com nome do produto
-      const resposta2 = await fetch("/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ busto, cintura, quadril, url: urlProduto, message: "Qual tamanho ideal?" })
-      }).then(r => r.json());
-
+      // *** Mensagem complementar fixa, conforme solicitado ***
+      // Substitua 'Nome do Vestido' pela variável real se tiver acesso ao nome do produto.
+      const nomeVestido = 'Nome do Vestido';
       const botDiv = document.createElement('div');
       botDiv.className = 'msg bot';
-      botDiv.innerHTML = resposta2.resposta;
+      botDiv.innerHTML = `
+        Você está prestes para arrasar com o <strong>${nomeVestido}</strong> no tamanho <strong>${tamanho}</strong>!<br>
+        Para facilitar essa decisão, liberei um cupom especial para você:<br>
+        Código do Cupom: <strong>TAM${tamanho}</strong> — use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!
+      `;
       addMsgElement(botDiv);
     }
 
