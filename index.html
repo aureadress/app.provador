@@ -32,7 +32,7 @@
       border-radius: 0 0 8px 8px;
       text-align: center;
     }
-    /* Estilos para tarja e tamanho recomendado */
+    /* Tarja preta */
     #faixa {
       background-color: #000;
       color: #fff;
@@ -51,9 +51,6 @@
     #faixa .banner-size strong {
       font-size: 20px;
       display: block;
-    }
-    /* Botão enviar em negrito */
-    #enviar-medidas-btn {
       font-weight: bold;
     }
     /* Mensagens de chat */
@@ -77,19 +74,24 @@
     }
   </style>
 </head>
-<body style="margin:0; padding:0; background-color:#f5f5f5; font-family: Montserrat, sans-serif;">
-  <div id="widget-provador" style="width: 380px; height: 570px; background-color: #f2f2f2; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(0,0,0,0.16); position: relative;">
+<body style="margin:0; padding:0; background-color:#f5f5f5;">
+  <div id="widget-provador" style="width:380px; height:570px; background:#f2f2f2; border-radius:8px; display:flex; flex-direction:column; box-shadow:0 2px 8px rgba(0,0,0,0.16); position:relative;">
 
     <!-- TOPO -->
-    <div style="background-color: #000; text-align: center; padding: 12px; position: relative;">
-      <img src="https://cdn.dooca.store/161300/files/inteligente-1-1.png?v=1744597262" alt="logo" style="height: 69px; width: 196px;" />
-      <button onclick="window.parent.postMessage('fechar-widget', '*')" style="position: absolute; top: 12px; right: 12px; background: transparent; border: none; cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="15" fill="white" stroke="black" stroke-width="2"/><path d="M11 11L21 21" stroke="black" stroke-width="2.5" stroke-linecap="round"/><path d="M11 21L21 11" stroke="black" stroke-width="2.5" stroke-linecap="round"/></svg>
+    <div style="background:#000; text-align:center; padding:12px; position:relative;">
+      <img src="https://cdn.dooca.store/161300/files/inteligente-1-1.png?v=1744597262" alt="logo" style="height:69px; width:196px;" />
+      <button onclick="window.parent.postMessage('fechar-widget','*')" style="position:absolute; top:12px; right:12px; background:transparent; border:none; cursor:pointer; width:32px; height:32px;">
+        <!-- ícone fechar -->
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <circle cx="16" cy="16" r="15" fill="white" stroke="black" stroke-width="2"/>
+          <path d="M11 11L21 21" stroke="black" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M11 21L21 11" stroke="black" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
       </button>
     </div>
 
     <!-- CHAT -->
-    <div id="chat" style="flex: 1; padding: 8px; font-size: 13px; overflow-y: auto; background: #eaeaea; display: flex; flex-direction: column;"></div>
+    <div id="chat" style="flex:1; padding:8px; font-size:13px; overflow-y:auto; background:#eaeaea; display:flex; flex-direction:column;"></div>
 
     <!-- TARJA -->
     <div id="faixa">
@@ -98,47 +100,47 @@
     </div>
 
     <!-- INPUTS -->
-    <div style="display: flex; justify-content: space-between; padding: 5px 5px 0 5px; gap: 5px;">
-      <div style="display: flex; flex-direction: column; align-items: center;">
+    <div style="display:flex; justify-content:space-between; padding:5px; gap:5px;">
+      <div style="display:flex; flex-direction:column; align-items:center;">
         <div class="label-box">BUSTO</div>
         <input id="busto" type="number" placeholder="busto (cm)" class="input-box">
       </div>
-      <div style="display: flex; flex-direction: column; align-items: center;">
+      <div style="display:flex; flex-direction:column; align-items:center;">
         <div class="label-box">CINTURA</div>
         <input id="cintura" type="number" placeholder="cintura (cm)" class="input-box">
       </div>
-      <div style="display: flex; flex-direction: column; align-items: center;">
+      <div style="display:flex; flex-direction:column; align-items:center;">
         <div class="label-box">QUADRIL</div>
         <input id="quadril" type="number" placeholder="quadril (cm)" class="input-box">
       </div>
     </div>
 
     <!-- BOTÃO -->
-    <div style="padding: 4px 8px;">
-      <button id="enviar-medidas-btn" onclick="enviarMedidas()" style="width: 100%; height: 30px; background: #000; color: #fff; font-size: 12px; border: none; border-radius: 6px;"><strong>ENVIAR MEDIDAS</strong></button>
+    <div style="padding:4px 8px;">
+      <button onclick="enviarMedidas()" style="width:100%; height:30px; background:#000; color:#fff; border:none; border-radius:6px;">
+        <strong>ENVIAR MEDIDAS</strong>
+      </button>
     </div>
 
     <!-- DÚVIDA -->
-    <div style="display: flex; padding: 6px 12px;">
-      <input id="pergunta" type="text" placeholder="Digite sua dúvida..." style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
-      <button onclick="enviarPergunta()" style="width: 44px; height: 44px; background: #000; color: white; font-size: 18px; border-radius: 8px; border: none; margin-left: 8px;">➤</button>
+    <div style="display:flex; padding:6px 12px;">
+      <input id="pergunta" type="text" placeholder="Digite sua dúvida..." style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc;">
+      <button onclick="enviarPergunta()" style="width:44px; height:44px; background:#000; color:#fff; border:none; border-radius:8px; margin-left:8px; font-size:18px;">➤</button>
     </div>
 
     <!-- RODAPÉ -->
-    <div style="background: #000; color: white; font-size: 10px; text-align: center; padding: 6px; font-weight: bold;">
+    <div style="background:#000; color:#fff; font-size:10px; text-align:center; padding:6px; font-weight:bold;">
       TECNOLOGIA PROVADOR INTELIGENTE
     </div>
   </div>
 
-  <!-- SCRIPT FUNCIONAL -->
   <script>
     const chat = document.getElementById("chat");
     const faixa = document.getElementById("faixa");
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlProduto = urlParams.get("url") || window.location.href;
+    const urlProduto = new URLSearchParams(location.search).get("url") || location.href;
 
-    function addMsgElement(element) {
-      chat.appendChild(element);
+    function addMsg(el) {
+      chat.appendChild(el);
       chat.scrollTop = chat.scrollHeight;
     }
 
@@ -147,59 +149,69 @@
       const cintura = document.getElementById("cintura").value;
       const quadril = document.getElementById("quadril").value;
 
-      const medidaDiv = document.createElement('div');
-      medidaDiv.className = 'msg user';
-      medidaDiv.innerHTML = `
+      // mostra medidas do usuário
+      const userDiv = document.createElement("div");
+      userDiv.className = "msg user";
+      userDiv.innerHTML = `
         <div>Minhas medidas são:</div>
-        <div><strong>Busto:</strong> <strong>${busto}</strong> cm</div>
-        <div><strong>Cintura:</strong> <strong>${cintura}</strong> cm</div>
-        <div><strong>Quadril:</strong> <strong>${quadril}</strong> cm</div>
+        <div><strong>${busto}</strong> cm de <strong>Busto</strong></div>
+        <div><strong>${cintura}</strong> cm de <strong>Cintura</strong></div>
+        <div><strong>${quadril}</strong> cm de <strong>Quadril</strong></div>
       `;
-      addMsgElement(medidaDiv);
+      addMsg(userDiv);
 
-      const response = await fetch('/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      // consulta o servidor
+      const resp = await fetch("/chat", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
         body: JSON.stringify({ busto, cintura, quadril, url: urlProduto })
-      });
-      const res = await response.json();
+      }).then(r => r.json());
 
-      document.getElementById('provador-tamanho').innerHTML = `<strong>${res.resposta}</strong>`;
+      const tamanho = resp.resposta;         // ex: "38"
+      const nomeVestido = resp.nomeProduto;  // servidor deve retornar este campo
+      const cupom = "TAM" + tamanho;
 
-      const nomeMatch = res.complemento.match(/^(Vestido[\s\S]*?) tamanho/i);
-      const nomeVestido = nomeMatch ? nomeMatch[1].trim() : '';
-      const complemento = `Parabéns pela escolha do <strong>${nomeVestido}</strong> no tamanho <strong>${res.resposta}</strong>!`;
+      // atualiza tarja preta
+      document.getElementById("provador-tamanho").innerText = tamanho;
 
-      const botDiv = document.createElement('div');
-      botDiv.className = 'msg bot';
-      botDiv.innerHTML = complemento;
-      addMsgElement(botDiv);
+      // nova mensagem de celebração
+      const botDiv = document.createElement("div");
+      botDiv.className = "msg bot";
+      botDiv.innerHTML = `
+        Você está prestes para arrasar com o <strong>${nomeVestido}</strong>  
+        no tamanho <strong>${tamanho}</strong>!<br>
+        Para facilitar essa decisão, liberei um cupom especial para você:<br>
+        Código do Cupom: <strong>${cupom}</strong> — use na finalização da compra  
+        e aproveite o desconto. Corre que é por tempo limitado!
+      `;
+      addMsg(botDiv);
     }
 
     async function enviarPergunta() {
-      const pergunta = document.getElementById('pergunta').value;
-      if (!pergunta.trim()) return;
-      const userDiv = document.createElement('div');
-      userDiv.className = 'msg user';
+      const pergunta = document.getElementById("pergunta").value.trim();
+      if (!pergunta) return;
+
+      const userDiv = document.createElement("div");
+      userDiv.className = "msg user";
       userDiv.innerText = pergunta;
-      addMsgElement(userDiv);
+      addMsg(userDiv);
 
-      const busto = document.getElementById('busto').value;
-      const cintura = document.getElementById('cintura').value;
-      const quadril = document.getElementById('quadril').value;
-      const response = await fetch('/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const busto = document.getElementById("busto").value;
+      const cintura = document.getElementById("cintura").value;
+      const quadril = document.getElementById("quadril").value;
+
+      const resp = await fetch("/chat", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
         body: JSON.stringify({ busto, cintura, quadril, url: urlProduto, message: pergunta })
-      });
-      const res = await response.json();
+      }).then(r => r.json());
 
-      const botDiv = document.createElement('div');
-      botDiv.className = 'msg bot';
-      botDiv.innerText = res.resposta;
-      addMsgElement(botDiv);
+      const botDiv = document.createElement("div");
+      botDiv.className = "msg bot";
+      botDiv.innerText = resp.resposta;
+      addMsg(botDiv);
 
-      document.getElementById('pergunta').value = '';
+      document.getElementById("pergunta").value = "";
     }
   </script>
 </body>
