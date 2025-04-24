@@ -32,7 +32,7 @@
       border-radius: 0 0 8px 8px;
       text-align: center;
     }
-    /* Tarja preta */
+    /* Estilos para tarja e números em negrito */
     #faixa {
       background-color: #000;
       color: #fff;
@@ -49,8 +49,8 @@
       margin-top: 4px;
     }
     #faixa .banner-size strong {
-      display: block;
       font-size: 20px;
+      display: block;
       font-weight: bold;
     }
     /* Mensagens de chat */
@@ -62,38 +62,38 @@
       max-width: 90%;
     }
     .msg.user {
-      /* usuário: fundo escuro, texto claro */
+      /* usuário em fundo escuro */
       background-color: #333;
       color: #fff;
       align-self: flex-end;
       text-align: left;
     }
     .msg.bot {
-      /* bot: fundo claro, texto escuro */
+      /* bot em fundo claro */
       background-color: #e0e0e0;
       color: #000;
       align-self: flex-start;
       text-align: left;
     }
-    /* Destaque apenas em <strong> */
+    /* destaca apenas strong */
     strong {
       font-weight: bold;
     }
   </style>
 </head>
-<body style="margin:0; padding:0; background-color:#f5f5f5;">
-  <div id="widget-provador" style="width:380px; height:570px; background-color:#f2f2f2; border-radius:8px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 2px 8px rgba(0,0,0,0.16);">
+<body style="margin:0; padding:0; background-color:#f5f5f5; font-family: Montserrat, sans-serif;">
+  <div id="widget-provador" style="width: 380px; height: 570px; background-color: #f2f2f2; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(0,0,0,0.16); position: relative;">
 
     <!-- TOPO -->
-    <div style="background-color:#000; text-align:center; padding:12px; position:relative;">
-      <img src="https://cdn.dooca.store/161300/files/inteligente-1-1.png?v=1744597262" alt="logo" style="height:69px; width:196px;" />
-      <button onclick="window.parent.postMessage('fechar-widget','*')" style="position:absolute; top:12px; right:12px; background:transparent; border:none; cursor:pointer; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">
+    <div style="background-color: #000; text-align: center; padding: 12px; position: relative;">
+      <img src="https://cdn.dooca.store/161300/files/inteligente-1-1.png?v=1744597262" alt="logo" style="height: 69px; width: 196px;" />
+      <button onclick="window.parent.postMessage('fechar-widget', '*')" style="position: absolute; top: 12px; right: 12px; background: transparent; border: none; cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
         <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="15" fill="white" stroke="black" stroke-width="2"/><path d="M11 11L21 21" stroke="black" stroke-width="2.5" stroke-linecap="round"/><path d="M11 21L21 11" stroke="black" stroke-width="2.5" stroke-linecap="round"/></svg>
       </button>
     </div>
 
     <!-- CHAT -->
-    <div id="chat" style="flex:1; padding:8px; font-size:13px; overflow-y:auto; background:#eaeaea; display:flex; flex-direction:column;"></div>
+    <div id="chat" style="flex: 1; padding: 8px; font-size: 13px; overflow-y: auto; background: #eaeaea; display: flex; flex-direction: column;"></div>
 
     <!-- TARJA -->
     <div id="faixa">
@@ -102,44 +102,46 @@
     </div>
 
     <!-- INPUTS -->
-    <div style="display:flex; justify-content:space-between; padding:5px 5px 0 5px; gap:5px;">
-      <div style="display:flex; flex-direction:column; align-items:center;">
+    <div style="display: flex; justify-content: space-between; padding: 5px 5px 0 5px; gap: 5px;">
+      <div style="display: flex; flex-direction: column; align-items: center;">
         <div class="label-box">BUSTO</div>
-        <input id="busto" type="number" placeholder="busto (cm)" class="input-box" />
+        <input id="busto" type="number" placeholder="busto (cm)" class="input-box">
       </div>
-      <div style="display:flex; flex-direction:column; align-items:center;">
+      <div style="display: flex; flex-direction: column; align-items: center;">
         <div class="label-box">CINTURA</div>
-        <input id="cintura" type="number" placeholder="cintura (cm)" class="input-box" />
+        <input id="cintura" type="number" placeholder="cintura (cm)" class="input-box">
       </div>
-      <div style="display:flex; flex-direction:column; align-items:center;">
+      <div style="display: flex; flex-direction: column; align-items: center;">
         <div class="label-box">QUADRIL</div>
-        <input id="quadril" type="number" placeholder="quadril (cm)" class="input-box" />
+        <input id="quadril" type="number" placeholder="quadril (cm)" class="input-box">
       </div>
     </div>
 
     <!-- BOTÃO -->
-    <div style="padding:4px 8px;">
-      <button onclick="enviarMedidas()" style="width:100%; height:30px; background:#000; color:#fff; font-size:12px; font-weight:bold; border:none; border-radius:6px;">ENVIAR MEDIDAS</button>
+    <div style="padding: 4px 8px;">
+      <button onclick="enviarMedidas()" style="width: 100%; height: 30px; background: #000; color: #fff; font-size: 12px; font-weight: bold; border: none; border-radius: 6px;">ENVIAR MEDIDAS</button>
     </div>
 
     <!-- DÚVIDA -->
-    <div style="display:flex; padding:6px 12px;">
-      <input id="pergunta" type="text" placeholder="Digite sua dúvida..." style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc;" />
-      <button onclick="enviarPergunta()" style="width:44px; height:44px; background:#000; color:#fff; font-size:18px; border-radius:8px; border:none; margin-left:8px;">➤</button>
+    <div style="display: flex; padding: 6px 12px;">
+      <input id="pergunta" type="text" placeholder="Digite sua dúvida..." style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+      <button onclick="enviarPergunta()" style="width: 44px; height: 44px; background: #000; color: white; font-size: 18px; border-radius: 8px; border: none; margin-left: 8px;">➤</button>
     </div>
 
     <!-- RODAPÉ -->
-    <div style="background:#000; color:#fff; font-size:10px; text-align:center; padding:6px; font-weight:normal;">
+    <div style="background: #000; color: white; font-size: 10px; text-align: center; padding: 6px; font-weight: bold;">
       TECNOLOGIA PROVADOR INTELIGENTE
     </div>
   </div>
 
   <script>
     const chat = document.getElementById("chat");
-    const urlProduto = new URLSearchParams(window.location.search).get("url") || window.location.href;
+    const faixa = document.getElementById("faixa");
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlProduto = urlParams.get("url") || window.location.href;
 
-    function addMsgElement(el) {
-      chat.appendChild(el);
+    function addMsgElement(element) {
+      chat.appendChild(element);
       chat.scrollTop = chat.scrollHeight;
     }
 
@@ -148,8 +150,8 @@
       const cintura = document.getElementById("cintura").value;
       const quadril = document.getElementById("quadril").value;
 
-      const medidaDiv = document.createElement("div");
-      medidaDiv.className = "msg user";
+      const medidaDiv = document.createElement('div');
+      medidaDiv.className = 'msg user';
       medidaDiv.innerHTML = `
         <div>Minhas medidas são:</div>
         <div>Busto: <strong>${busto}</strong> cm</div>
@@ -161,46 +163,51 @@
       const resposta = await fetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ busto, cintura, quadril, url: urlProduto }),
-      }).then((r) => r.json());
+        body: JSON.stringify({ busto, cintura, quadril, url: urlProduto })
+      }).then(r => r.json());
 
-      document.getElementById("provador-tamanho").innerText = resposta.resposta;
+      document.getElementById('provador-tamanho').innerText = resposta.resposta;
 
-      const botDiv = document.createElement("div");
-      botDiv.className = "msg bot";
+      const botDiv = document.createElement('div');
+      botDiv.className = 'msg bot';
       botDiv.innerHTML = resposta.complemento;
       addMsgElement(botDiv);
     }
 
     async function enviarPergunta() {
-      const pergunta = document.getElementById("pergunta").value.trim();
-      if (!pergunta) return;
-      const userDiv = document.createElement("div");
-      userDiv.className = "msg user";
+      const pergunta = document.getElementById("pergunta").value;
+      if (!pergunta.trim()) return;
+
+      const userDiv = document.createElement('div');
+      userDiv.className = 'msg user';
       userDiv.innerText = pergunta;
       addMsgElement(userDiv);
 
-      const busto = document.getElementById("busto").value;
-      const cintura = document.getElementById("cintura").value;
-      const quadril = document.getElementById("quadril").value;
+      const busto = document.getElementById("busto");
+      const cintura = document.getElementById("cintura");
+      const quadril = document.getElementById("quadril");
+
       const resposta = await fetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ busto, cintura, quadril, url: urlProduto, message: pergunta }),
-      }).then((r) => r.json());
+        body: JSON.stringify({ busto: busto.value, cintura: cintura.value, quadril: quadril.value, url: urlProduto, message: pergunta })
+      }).then(r => r.json());
 
-      const botDiv = document.createElement("div");
-      botDiv.className = "msg bot";
+      const botDiv = document.createElement('div');
+      botDiv.className = 'msg bot';
       botDiv.innerHTML = resposta.resposta;
       addMsgElement(botDiv);
 
       document.getElementById("pergunta").value = "";
     }
 
-    window.addEventListener("message", (event) => {
+    // Fecha o widget ao receber mensagem do iframe
+    window.addEventListener("message", function (event) {
       if (event.data === "fechar-widget") {
-        document.getElementById("iframe-provador")?.remove();
-        document.getElementById("overlay-fundo")?.remove();
+        const iframe = document.getElementById("iframe-provador");
+        const overlay = document.getElementById("overlay-fundo");
+        if (iframe) document.body.removeChild(iframe);
+        if (overlay) document.body.removeChild(overlay);
       }
     });
   </script>
