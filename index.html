@@ -62,18 +62,20 @@
       max-width: 90%;
     }
     .msg.user {
-      background: #e0e0e0;
-      color: #000;
+      /* usuário em fundo escuro */
+      background-color: #333;
+      color: #fff;
       align-self: flex-end;
       text-align: left;
     }
     .msg.bot {
-      background: #333;
-      color: #fff;
+      /* bot em fundo claro */
+      background-color: #e0e0e0;
+      color: #000;
       align-self: flex-start;
       text-align: left;
     }
-    /* Mantém strong destacado */
+    /* destaca apenas strong */
     strong {
       font-weight: bold;
     }
@@ -181,14 +183,14 @@
       userDiv.innerText = pergunta;
       addMsgElement(userDiv);
 
-      const busto = document.getElementById("busto").value;
-      const cintura = document.getElementById("cintura").value;
-      const quadril = document.getElementById("quadril").value;
+      const busto = document.getElementById("busto");
+      const cintura = document.getElementById("cintura");
+      const quadril = document.getElementById("quadril");
 
       const resposta = await fetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ busto, cintura, quadril, url: urlProduto, message: pergunta })
+        body: JSON.stringify({ busto: busto.value, cintura: cintura.value, quadril: quadril.value, url: urlProduto, message: pergunta })
       }).then(r => r.json());
 
       const botDiv = document.createElement('div');
