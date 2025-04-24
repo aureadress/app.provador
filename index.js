@@ -33,9 +33,9 @@ app.post('/chat', async (req, res) => {
     const nomeProduto = $('.product-info-content h1').first().text().trim();
     const descricao = $('#product-description').text().trim();
 
-    // Monta tabela de medidas
+    // NOVO BLOCO: Monta tabela de medidas só na descrição do produto
     let tabelaMedidas = [];
-    $('table').each((_, tabela) => {
+    $('#product-description table').each((_, tabela) => {
       const headers = [];
       $(tabela).find('tr').each((i, row) => {
         const cells = $(row).find('td, th');
@@ -47,6 +47,7 @@ app.post('/chat', async (req, res) => {
             const key = headers[j];
             if (key) values[key] = $(cell).text().trim();
           });
+          // Só adiciona se tiver busto E cintura
           if (values['busto'] && values['cintura']) tabelaMedidas.push(values);
         }
       });
