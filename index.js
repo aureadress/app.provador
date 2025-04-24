@@ -12,13 +12,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Servir arquivos estáticos (index.html e widget.js)
+// Servir arquivos estáticos (a pasta onde estão index.html e widget.js)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname);
 app.use(express.static(rootDir));
 
-// Rota principal
+// Rota principal: serve o widget
 app.get('/', (req, res) => {
   res.sendFile(path.join(rootDir, 'index.html'));
 });
@@ -33,24 +33,21 @@ app.post('/chat', async (req, res) => {
     const nomeProduto = $('.product-info-content h1').first().text().trim();
     const descricao = $('#product-description').text().trim();
 
-    // Monta tabela de medidas (lógica original restaurada)
+    // Monta tabela de medidas (lógica restaurada)
     let tabelaMedidas = [];
     $('table').each((_, tabela) => {
       const headers = [];
       $(tabela).find('tr').each((i, row) => {
         const cells = $(row).find('td, th');
         if (i === 0) {
-          cells.each((_, cell) =>
-            headers.push($(cell).text().trim().toLowerCase())
-          );
+          cells.each((_, cell) => headers.push($(cell).text().trim().toLowerCase()));
         } else {
           const values = {};
           cells.each((j, cell) => {
             const key = headers[j];
             if (key) values[key] = $(cell).text().trim();
           });
-          if (values['busto'] && values['cintura'])
-            tabelaMedidas.push(values);
+          if (values['busto'] && values['cintura']) tabelaMedidas.push(values);
         }
       });
     });
@@ -59,19 +56,14 @@ app.post('/chat', async (req, res) => {
     if (!tabelaMedidas.length) {
       return res.json({
         resposta: '',
-        complemento:
-          'Não consigo fornecer uma recomendação de tamanho sem a tabela de medidas.',
+        complemento: 'Não consigo fornecer uma recomendação de tamanho sem a tabela de medidas.'
       });
     }
 
-    // Extrai cores disponíveis
-    const cores = $('.variant-item')
-      .map((_, el) => $(el).text().trim())
-      .get();
+    // Extrai cores disponíveis (caso queira usar em dúvidas)
+    const cores = $('.variant-item').map((_, el) => $(el).text().trim()).get();
 
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     // Fluxo de atendimento a dúvidas abertas
     if (message) {
@@ -88,13 +80,13 @@ Dúvida: "${message}"
         model: 'gpt-4',
         messages: [
           { role: 'system', content: 'Seja breve e direto, sem emojis.' },
-          { role: 'user', content: promptGeral },
-        ],
+          { role: 'user', content: promptGeral }
+        ]
       });
 
       return res.json({
         resposta: atendimento.choices[0].message.content.trim(),
-        complemento: '',
+        complemento: '' // sem complemento neste fluxo
       });
     }
 
@@ -111,23 +103,21 @@ Indique apenas o número do tamanho ideal (36–58).
     const sizeCompletion = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
-        {
-          role: 'system',
-          content: 'Responda apenas com o número do tamanho, sem texto extra.',
-        },
-        { role: 'user', content: promptTamanho },
-      ],
+        { role: 'system', content: 'Responda apenas com o número do tamanho, sem texto extra.' },
+        { role: 'user', content: promptTamanho }
+      ]
     });
 
     const tamanhoIdeal = sizeCompletion.choices[0].message.content.trim();
     const cupom = `TAM${tamanhoIdeal}`;
-    const complemento = `Você está prestes para arrasar com o <strong>${nomeProduto}</strong> no tamanho <strong>${tamanhoIdeal}</strong>! Para facilitar, liberei um cupom especial:<br>
-Código do Cupom: <strong>${cupom}</strong> — use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!`;
+    const complemento = `Você está prestes para arrasar com o <strong>${nomeProduto}</strong> no tamanho <strong>${tamanhoIdeal}</strong>. Para facilitar, liberei um cupom especial:
+Código do Cupom: <strong>${cupom}</strong> Use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!`;
 
     return res.json({
       resposta: tamanhoIdeal,
-      complemento,
+      complemento
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ erro: 'Erro ao processar a requisição' });
@@ -135,6 +125,4 @@ Código do Cupom: <strong>${cupom}</strong> — use na finalização da compra e
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () =>
-  console.log(`Servidor rodando na porta ${PORT}`)
-);
+app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
