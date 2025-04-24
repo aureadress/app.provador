@@ -12,12 +12,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Serve arquivos estáticos
+// Servir arquivos estáticos (a pasta onde estão index.html e widget.js)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname);
 app.use(express.static(rootDir));
 
+// Rota principal: serve o widget
 app.get('/', (req, res) => {
   res.sendFile(path.join(rootDir, 'index.html'));
 });
@@ -28,6 +29,7 @@ app.post('/chat', async (req, res) => {
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
 
+    // Extrai nome e descrição do produto
     const nomeProduto = $('.product-info-content h1').first().text().trim();
     const descricao = $('#product-description').text().trim();
 
@@ -50,6 +52,7 @@ app.post('/chat', async (req, res) => {
       });
     });
 
+    // Se não houver tabela, retorna erro amigável
     if (!tabelaMedidas.length) {
       return res.json({
         resposta: '',
@@ -57,10 +60,12 @@ app.post('/chat', async (req, res) => {
       });
     }
 
+    // Extrai cores disponíveis (caso queira usar em dúvidas)
     const cores = $('.variant-item').map((_, el) => $(el).text().trim()).get();
+
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    // Atendimento a dúvidas abertas
+    // Fluxo de atendimento a dúvidas abertas
     if (message) {
       const promptGeral = `
 Você é um vendedor especialista da Exclusive Dress.
@@ -85,7 +90,7 @@ Dúvida: "${message}"
       });
     }
 
-    // Recomendação de tamanho
+    // Fluxo de recomendação de tamanho
     const promptTamanho = `
 Você é assistente de vendas de moda. Com base nestas medidas da cliente:
 - Busto: ${busto} cm
@@ -94,6 +99,7 @@ Você é assistente de vendas de moda. Com base nestas medidas da cliente:
 E na tabela de medidas JSON: ${JSON.stringify(tabelaMedidas)}
 Indique apenas o número do tamanho ideal (36–58).
 `;
+
     const sizeCompletion = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
@@ -104,13 +110,7 @@ Indique apenas o número do tamanho ideal (36–58).
 
     const tamanhoIdeal = sizeCompletion.choices[0].message.content.trim();
     const cupom = `TAM${tamanhoIdeal}`;
-
-    // Mensagem com <strong> apenasnos trechos solicitados
-    const complemento = `
-Você está prestes para arrasar com o <strong>${nomeProduto}</strong> no tamanho <strong>${tamanhoIdeal}</strong>! 
-Para facilitar, liberei um cupom especial:<br>
-<strong>Código do Cupom: ${cupom}</strong> — use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!
-`;
+    const complemento = `Você está prestes para arrasar com o **${nomeProduto}** no tamanho **${tamanhoIdeal}**! Para facilitar, liberei um cupom especial:\n**Código do Cupom: ${cupom}** — use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!`;
 
     return res.json({
       resposta: tamanhoIdeal,
