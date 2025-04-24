@@ -43,22 +43,25 @@
       line-height: 1.2;
     }
     #faixa .banner-text {
+      font-weight: 400; /* texto normal */
       text-transform: uppercase;
     }
     #faixa .banner-size {
       margin-top: 4px;
+      font-weight: 400; /* texto normal */
     }
     #faixa .banner-size strong {
       font-size: 20px;
       display: block;
-      font-weight: bold;
+      font-weight: bold; /* tamanho destacado */
     }
-    /* Mensagens de chat */
+    /* Mensagens de chat: texto normal, apenas <strong> em negrito */
     .msg {
       padding: 10px;
       border-radius: 10px;
       margin-bottom: 10px;
       max-width: 90%;
+      font-weight: 400;
     }
     .msg.user {
       background: #e0e0e0;
@@ -112,7 +115,7 @@
 
     <!-- BOTÃO -->
     <div style="padding: 4px 8px;">
-      <button onclick="enviarMedidas()" style="width: 100%; height: 30px; background: #000; color: #fff; font-size: 12px; font-weight: bold; border: none; border-radius: 6px;"><strong>ENVIAR MEDIDAS</strong></button>
+      <button onclick="enviarMedidas()" style="width: 100%; height: 30px; background: #000; color: #fff; font-size: 12px; border: none; border-radius: 6px;"><strong>ENVIAR MEDIDAS</strong></button>
     </div>
 
     <!-- DÚVIDA -->
@@ -149,9 +152,9 @@
       medidaDiv.className = 'msg user';
       medidaDiv.innerHTML = `
         <div>Minhas medidas são:</div>
-        <div><strong>Busto:</strong> <strong>${busto}</strong> cm</div>
-        <div><strong>Cintura:</strong> <strong>${cintura}</strong> cm</div>
-        <div><strong>Quadril:</strong> <strong>${quadril}</strong> cm</div>
+        <div>Busto: <strong>${busto}</strong> cm</div>
+        <div>Cintura: <strong>${cintura}</strong> cm</div>
+        <div>Quadril: <strong>${quadril}</strong> cm</div>
       `;
       addMsgElement(medidaDiv);
 
