@@ -5,9 +5,13 @@
   <meta name="viewport" content="width=380, initial-scale=1.0" />
   <title>Provador Inteligente</title>
   <style>
-    /* Fonte padrão não negrito */
+    /* Fonte padrão não negrito para texto normal */
     #widget-provador, #widget-provador * {
       font-weight: 400 !important;
+    }
+    /* Garantir que strong fique em negrito */
+    #widget-provador strong {
+      font-weight: 600 !important;
     }
     body, input, button {
       font-family: 'Montserrat', sans-serif;
@@ -36,7 +40,7 @@
       border-radius: 0 0 8px 8px;
       text-align: center;
     }
-    /* Tarja com tamanho em negrito */
+    /* Tarja com tamanho e número em negrito */
     #faixa {
       background-color: #000;
       color: #fff;
@@ -125,7 +129,6 @@
   <!-- SCRIPT -->
   <script>
     const chat = document.getElementById("chat");
-    const faixa = document.getElementById("faixa");
     const urlProduto = new URLSearchParams(window.location.search).get("url") || window.location.href;
 
     function addMsg(tipo, html) {
@@ -140,7 +143,6 @@
       const busto = document.getElementById("busto").value;
       const cintura = document.getElementById("cintura").value;
       const quadril = document.getElementById("quadril").value;
-      // Mostra apenas números em negrito
       addMsg("user", `Minhas medidas são: Busto <strong>${busto}</strong> cm, Cintura <strong>${cintura}</strong> cm, Quadril <strong>${quadril}</strong> cm`);
 
       const res = await fetch("/chat", {
@@ -149,13 +151,12 @@
         body: JSON.stringify({ busto, cintura, quadril, url: urlProduto })
       }).then(r => r.json());
 
-      // Mostra tamanho em negrito na tarja
-      document.getElementById("provador-tamanho").innerText = res.resposta;
+      document.getElementById("provador-tamanho").innerHTML = `<strong>${res.resposta}</strong>`;
 
-      // Mensagem complementar com nome do vestido e tamanho em negrito
-      let complemento = res.complemento;
-      complemento = complemento.replace(/(Vestido[\s\S]*?)\s*tamanho\s*(\d+)/i, (m, nomeVestido, num) =>
-        `<strong>${nomeVestido.trim()}</strong> tamanho <strong>${num}</strong>`
+      let complemento = res.complemento || "";
+      complemento = complemento.replace(/^['"]|['"]$/g, "");
+      complemento = complemento.replace(/(Vestido[\s\S]*?)\s*,?\s*tamanho\s*(\d+)/i,
+        `<strong>$1</strong> tamanho <strong>$2</strong>`
       );
       addMsg("bot", complemento);
     }
