@@ -177,7 +177,7 @@
       if (!pergunta) return;
       const userDiv = document.createElement("div");
       userDiv.className = "msg user";
-      userDiv.innerText = pergunta;
+      userDiv.innerHTML = pergunta;
       addMsgElement(userDiv);
 
       const busto = document.getElementById("busto").value;
