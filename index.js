@@ -25,7 +25,7 @@ app.get('/', (req, res) => {
 
 app.post('/chat', async (req, res) => {
   try {
-    const { busto, cintura, quadril, url, message } = req.body;
+    const { busto, cintura, quadril, url, message, nomeLoja } = req.body;
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
 
@@ -74,32 +74,52 @@ app.post('/chat', async (req, res) => {
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    // Fluxo de dúvidas
+    // === FLUXO DE DÚVIDAS ===
     if (message) {
-      const promptGeral = `
-Você é um vendedor especialista da ${nomeLoja || 'Sua Loja'}.
+      try {
+        // LOG de todos os dados recebidos e extraídos
+        console.log({
+          busto, cintura, quadril, url, message, nomeLoja,
+          nomeProduto, descricao, tabelaMedidas, cores
+        });
+
+        const promptGeral = `
+Você é um vendedor especialista da loja ${nomeLoja || 'Sua Loja'}.
 Produto: ${nomeProduto}
 Descrição: ${descricao}
 Cores: ${cores.join(', ')}
 Tabela de medidas: ${JSON.stringify(tabelaMedidas)}
 
 Dúvida: "${message}"
-`;
-      const atendimento = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          { role: 'system', content: 'Seja breve e direto, sem emojis.' },
-          { role: 'user', content: promptGeral }
-        ]
-      });
 
-      return res.json({
-        resposta: atendimento.choices[0].message.content.trim(),
-        complemento: ''
-      });
+REGRAS:
+- Sempre responda dúvidas de forma breve e clara.
+- Nunca diga que não sabe, utilize os dados acima.
+        `;
+
+        const atendimento = await openai.chat.completions.create({
+          model: 'gpt-4',
+          messages: [
+            { role: 'system', content: 'Seja breve, objetivo, SEM emojis. Sempre informe o que for perguntado usando os dados acima.' },
+            { role: 'user', content: promptGeral }
+          ]
+        });
+
+        return res.json({
+          resposta: atendimento.choices[0].message.content.trim(),
+          complemento: ''
+        });
+      } catch (err) {
+        // LOG de erro detalhado
+        console.error("Erro no fluxo de dúvidas:", err);
+        return res.json({
+          resposta: "Desculpe, ocorreu um erro ao responder sua dúvida. Tente novamente em instantes.",
+          complemento: ""
+        });
+      }
     }
 
-    // Fluxo de recomendação de tamanho
+    // === FLUXO DE RECOMENDAÇÃO DE TAMANHO ===
     const promptTamanho = `
 Você é assistente de vendas de moda. Com base nestas medidas da cliente:
 - Busto: ${busto} cm
@@ -107,7 +127,6 @@ Você é assistente de vendas de moda. Com base nestas medidas da cliente:
 - Quadril: ${quadril} cm
 E na tabela de medidas JSON: ${JSON.stringify(tabelaMedidas)}
 Indique apenas o número do tamanho ideal (36–58).
-Nunca envie a tabela de medidas na tela do chat, apenas respostas caso seja questionado tamanhos disponível.
 `;
 
     const sizeCompletion = await openai.chat.completions.create({
