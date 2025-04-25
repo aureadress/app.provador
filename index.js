@@ -32,7 +32,6 @@ app.post('/chat', async (req, res) => {
     // Extrai nome e descrição do produto
     const nomeProduto = $('.product-info-content h1').first().text().trim();
     const descricao = $('#product-description').text().trim();
-    const preco = $('.product-price-final .total').first().text().trim();
 
     // Monta tabela de medidas (versão inteligente)
     let tabelaMedidas = [];
