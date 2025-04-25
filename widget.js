@@ -1,5 +1,27 @@
 (function () {
+  // Função para deixar iniciais maiúsculas
+  function capitalizarNome(nome) {
+    return nome
+      .toLowerCase()
+      .replace(/(^|\s|[-])([a-zá-ú])/g, (match, p1, p2) => p1 + p2.toUpperCase());
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
+    const scripts = document.querySelectorAll('script[src*="provadorinteligente.com.br/widget.js"]');
+    let nomeLoja = "Loja Padrão";
+
+    scripts.forEach(script => {
+      let node = script.previousSibling;
+      while (node && node.nodeType !== Node.COMMENT_NODE) node = node.previousSibling;
+      if (node && node.nodeType === Node.COMMENT_NODE) {
+        const match = node.nodeValue.match(/PROVADOR INTELIGENTE - (.+)/i);
+        if (match) {
+          nomeLoja = capitalizarNome(match[1].trim());
+        }
+      }
+    });
+
+    // ⬇️ Widget popup padrão
     const checkInterval = setInterval(() => {
       const isProductPage = document.querySelector(".page--product");
       const target = document.querySelector(".page--product .product-info-content .product-action");
@@ -22,7 +44,8 @@
 
         botao.onclick = () => {
           const iframe = document.createElement("iframe");
-          iframe.src = "https://app.provadorinteligente.com.br?url=" + encodeURIComponent(window.location.href);
+          // Passa nomeLoja via query param (opcional, se backend aceitar)
+          iframe.src = "https://app.provadorinteligente.com.br?url=" + encodeURIComponent(window.location.href) + "&loja=" + encodeURIComponent(nomeLoja);
           iframe.style.position = "fixed";
           iframe.style.top = "50%";
           iframe.style.left = "50%";
@@ -67,4 +90,3 @@
     }
   });
 })();
- 
