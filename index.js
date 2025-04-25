@@ -77,7 +77,7 @@ app.post('/chat', async (req, res) => {
     // Fluxo de dúvidas
     if (message) {
       const promptGeral = `
-Você é um vendedor especialista da Exclusive Dress.
+Você é um vendedor especialista da ${nomeLoja || 'Sua Loja'}.
 Produto: ${nomeProduto}
 Descrição: ${descricao}
 Cores: ${cores.join(', ')}
