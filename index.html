@@ -10,7 +10,7 @@
       font-weight: 600;
     }
     input, button {
-      font-size: 16px; /* Remove zoom no mobile */
+      font-size: 16px;
     }
     .label-box {
       width: 100px;
@@ -31,9 +31,8 @@
       border-top: none;
       border-radius: 0 0 8px 8px;
       text-align: center;
-      font-size: 16px; /* Remove zoom no mobile */
+      font-size: 16px;
     }
-    /* Estilos para tarja e números em negrito */
     #faixa {
       background-color: #000;
       color: #fff;
@@ -54,7 +53,6 @@
       display: block;
       font-weight: bold;
     }
-    /* Mensagens de chat */
     .msg,
     .msg *:not(strong) {
       font-weight: 400 !important;
@@ -89,14 +87,14 @@
       #widget-provador button[onclick*='fechar-widget'] {
         top: 10px !important;
         right: 10px !important;
-        width: 35px !important;
-        height: 35px !important;
+        width: 32px !important;
+        height: 32px !important;
         z-index: 100000 !important;
         padding: 0 !important;
       }
       #widget-provador button[onclick*='fechar-widget'] svg {
-        width: 25px !important;
-        height: 25px !important;
+        width: 20px !important;
+        height: 20px !important;
       }
     }
   </style>
@@ -164,6 +162,7 @@
     const faixa = document.getElementById("faixa");
     const urlParams = new URLSearchParams(window.location.search);
     const urlProduto = urlParams.get("url") || window.location.href;
+    const nomeLoja = urlParams.get("loja") || "Sua Loja";
 
     function addMsgElement(element) {
       chat.appendChild(element);
@@ -188,7 +187,7 @@
       const resposta = await fetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ busto, cintura, quadril, url: urlProduto })
+        body: JSON.stringify({ busto, cintura, quadril, url: urlProduto, nomeLoja })
       }).then(r => r.json());
 
       document.getElementById('provador-tamanho').innerText = resposta.resposta;
@@ -215,7 +214,7 @@
       const resposta = await fetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ busto, cintura, quadril, url: urlProduto, message: pergunta })
+        body: JSON.stringify({ busto, cintura, quadril, url: urlProduto, nomeLoja, message: pergunta })
       }).then(r => r.json());
 
       const botDiv = document.createElement('div');
