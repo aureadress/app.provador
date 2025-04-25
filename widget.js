@@ -21,14 +21,12 @@
       }
     });
 
-    // ⬇️ Widget popup padrão
-    const checkInterval = setInterval(() => {
+    // Sempre verifica e injeta o botão, caso sumam ao trocar de variação
+    setInterval(() => {
       const isProductPage = document.querySelector(".page--product");
       const target = document.querySelector(".page--product .product-info-content .product-action");
 
       if (isProductPage && target && !document.getElementById("btn-provador")) {
-        clearInterval(checkInterval);
-
         const botao = document.createElement("button");
         botao.id = "btn-provador";
         botao.innerText = "DESCUBRA SEU TAMANHO";
@@ -41,10 +39,10 @@
         botao.style.fontSize = "14px";
         botao.style.fontWeight = "bold";
         botao.style.marginTop = "12px";
+        botao.style.marginBottom = "16px"; // Espaçamento abaixo do botão
 
         botao.onclick = () => {
           const iframe = document.createElement("iframe");
-          // Passa nomeLoja via query param (opcional, se backend aceitar)
           iframe.src = "https://app.provadorinteligente.com.br?url=" + encodeURIComponent(window.location.href) + "&loja=" + encodeURIComponent(nomeLoja);
           iframe.style.position = "fixed";
           iframe.style.top = "50%";
@@ -77,7 +75,7 @@
 
         target.insertBefore(botao, target.firstChild);
       }
-    }, 500);
+    }, 500); // roda a cada meio segundo
   });
 
   // 🔄 Ouve o comando de fechar vindo do iframe
