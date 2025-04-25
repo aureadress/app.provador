@@ -194,7 +194,7 @@
 
       const botDiv = document.createElement('div');
       botDiv.className = 'msg bot';
-      botDiv.innerHTML = resposta.complemento;
+      botDiv.innerText = resposta.resposta; // CERTO para dúvidas!
       addMsgElement(botDiv);
     }
 
