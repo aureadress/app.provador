@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
+import * as cheerio from 'cheerio';
 import dotenv from 'dotenv';
 import { OpenAI } from 'openai';
 import path from 'path';
@@ -11,11 +12,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Servir arquivos estáticos (a pasta onde estão index.html e widget.js)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname);
 app.use(express.static(rootDir));
 
+// Rota principal: serve o widget
 app.get('/', (req, res) => {
   res.sendFile(path.join(rootDir, 'index.html'));
 });
@@ -23,59 +26,64 @@ app.get('/', (req, res) => {
 app.post('/chat', async (req, res) => {
   try {
     const { busto, cintura, quadril, url, message, nomeLoja } = req.body;
-    const urlObj = new URL(url);
+    const response = await axios.get(url);
+    const $ = cheerio.load(response.data);
 
-    const headers = { Authorization: `Bearer ${process.env.BAGY_API_KEY}` };
+    // Extrai nome e descrição do produto
+    const nomeProduto = $('.product-info-content h1').first().text().trim();
+    const descricao = $('#product-description').text().trim();
 
-    let produto = null;
-
-    // Verificar se existe variation=ID na URL
-    const searchParams = urlObj.searchParams;
-    const variationId = searchParams.get('variation');
-
-    if (variationId) {
-      // Buscar variation e extrair o product_id
-      const variationResponse = await axios.get(`https://api.dooca.store/variations/${variationId}`, { headers });
-      const productId = variationResponse.data.product_id;
-      if (productId) {
-        const produtoResponse = await axios.get(`https://api.dooca.store/products/${productId}`, { headers });
-        produto = produtoResponse.data;
-      }
-    } else {
-      // Buscar pelo slug como fallback
-      const slug = urlObj.pathname.replace(/^\//, '').replace(/\?.*$/, '');
-      const produtoResponse = await axios.get(`https://api.dooca.store/products?slug=${encodeURIComponent(slug)}`, { headers });
-      produto = Array.isArray(produtoResponse.data) ? produtoResponse.data[0] : null;
-    }
-
-    if (!produto || !produto.name) {
-      return res.json({ resposta: '', complemento: 'Não foi possível encontrar os dados do produto na API.' });
-    }
-
-    const nomeProduto = produto.name;
-    const descricao = produto.description || '';
-    const cores = Array.isArray(produto.variations)
-      ? produto.variations.map(v => v.color?.name).filter(Boolean)
-      : [];
-
+    // Monta tabela de medidas (versão inteligente)
     let tabelaMedidas = [];
-    if (Array.isArray(produto.features)) {
-      const medidasFeature = produto.features.find(f => f.name.toLowerCase().includes('medidas'));
-      if (medidasFeature && Array.isArray(medidasFeature.values)) {
-        tabelaMedidas = medidasFeature.values.map(v => {
-          try {
-            return JSON.parse(v.name);
-          } catch {
-            return null;
-          }
-        }).filter(Boolean);
-      }
+    $('table').each((_, tabela) => {
+      let headers = [];
+      let foundHeader = false;
+      $(tabela).find('tr').each((i, row) => {
+        const cells = $(row).find('td, th');
+        const cellTexts = cells.map((_, cell) => $(cell).text().trim().toLowerCase()).get();
+
+        // Identifica a linha do cabeçalho
+        if (!foundHeader && cellTexts.includes('busto') && cellTexts.includes('cintura')) {
+          headers = cellTexts;
+          foundHeader = true;
+          return;
+        }
+
+        // Só processa linhas após o cabeçalho
+        if (foundHeader && cells.length === headers.length) {
+          const values = {};
+          cells.each((j, cell) => {
+            const key = headers[j];
+            if (key) values[key] = $(cell).text().trim();
+          });
+          if (values['busto'] && values['cintura']) tabelaMedidas.push(values);
+        }
+      });
+    });
+
+    // Se não houver tabela, retorna erro amigável
+    if (!tabelaMedidas.length) {
+      return res.json({
+        resposta: '',
+        complemento: 'Não consigo fornecer uma recomendação de tamanho sem a tabela de medidas.'
+      });
     }
+
+    // Extrai cores disponíveis
+    const cores = $('.variant-item').map((_, el) => $(el).text().trim()).get();
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+    // === FLUXO DE DÚVIDAS ===
     if (message) {
-      const promptGeral = `
+      try {
+        // LOG de todos os dados recebidos e extraídos
+        console.log({
+          busto, cintura, quadril, url, message, nomeLoja,
+          nomeProduto, descricao, tabelaMedidas, cores
+        });
+
+        const promptGeral = `
 Você é um vendedor especialista da loja ${nomeLoja || 'Sua Loja'}.
 Produto: ${nomeProduto}
 Descrição: ${descricao}
@@ -87,26 +95,31 @@ Dúvida: "${message}"
 REGRAS:
 - Sempre responda dúvidas de forma breve e clara.
 - Nunca diga que não sabe, utilize os dados acima.
-      `;
+        `;
 
-      const atendimento = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          { role: 'system', content: 'Seja breve, objetivo, SEM emojis. Sempre informe o que for perguntado usando os dados acima.' },
-          { role: 'user', content: promptGeral }
-        ]
-      });
+        const atendimento = await openai.chat.completions.create({
+          model: 'gpt-4',
+          messages: [
+            { role: 'system', content: 'Seja breve, objetivo, SEM emojis. Sempre informe o que for perguntado usando os dados acima.' },
+            { role: 'user', content: promptGeral }
+          ]
+        });
 
-      return res.json({
-        resposta: atendimento.choices[0].message.content.trim(),
-        complemento: ''
-      });
+        return res.json({
+          resposta: atendimento.choices[0].message.content.trim(),
+          complemento: ''
+        });
+      } catch (err) {
+        // LOG de erro detalhado
+        console.error("Erro no fluxo de dúvidas:", err);
+        return res.json({
+          resposta: "Desculpe, ocorreu um erro ao responder sua dúvida. Tente novamente em instantes.",
+          complemento: ""
+        });
+      }
     }
 
-    if (!tabelaMedidas.length) {
-      return res.json({ resposta: '', complemento: 'Tabela de medidas não encontrada neste produto.' });
-    }
-
+    // === FLUXO DE RECOMENDAÇÃO DE TAMANHO ===
     const promptTamanho = `
 Você é assistente de vendas de moda. Com base nestas medidas da cliente:
 - Busto: ${busto} cm
@@ -114,7 +127,7 @@ Você é assistente de vendas de moda. Com base nestas medidas da cliente:
 - Quadril: ${quadril} cm
 E na tabela de medidas JSON: ${JSON.stringify(tabelaMedidas)}
 Indique apenas o número do tamanho ideal (36–58).
-    `;
+`;
 
     const sizeCompletion = await openai.chat.completions.create({
       model: 'gpt-4',
@@ -128,11 +141,14 @@ Indique apenas o número do tamanho ideal (36–58).
     const cupom = `TAM${tamanhoIdeal}`;
     const complemento = `Você está prestes para arrasar com o <strong>${nomeProduto}</strong> no tamanho <strong>${tamanhoIdeal}</strong>. Para facilitar, liberei um cupom especial:<br><strong>Código do Cupom: ${cupom}</strong> Use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!`;
 
-    return res.json({ resposta: tamanhoIdeal, complemento });
+    return res.json({
+      resposta: tamanhoIdeal,
+      complemento
+    });
 
   } catch (err) {
-    console.error('Erro geral:', err);
-    res.status(500).json({ resposta: '', complemento: 'Erro interno ao processar as informações.' });
+    console.error(err);
+    res.status(500).json({ erro: 'Erro ao processar a requisição' });
   }
 });
 
