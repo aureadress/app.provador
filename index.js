@@ -16,7 +16,6 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname);
 app.use(express.static(rootDir));
 
-// Rota principal
 app.get('/', (req, res) => {
   res.sendFile(path.join(rootDir, 'index.html'));
 });
@@ -25,13 +24,11 @@ app.post('/chat', async (req, res) => {
   try {
     const { busto, cintura, quadril, url, message, nomeLoja } = req.body;
 
-    // Corrigir extração de slug (pegar penúltimo item da URL)
     const partes = url.split('/').filter(Boolean);
     const slug = partes[partes.length - 2];
 
     console.log("🔎 SLUG EXTRAÍDO:", slug);
 
-    // Buscar produto pela API da Bagy
     const apiResponse = await axios.get(`https://api.dooca.store/products?slug=${slug}`, {
       headers: {
         Authorization: `Bearer ${process.env.BAGY_API_KEY}`
@@ -40,10 +37,10 @@ app.post('/chat', async (req, res) => {
 
     console.log("📦 RESPOSTA COMPLETA DA BAGY:", apiResponse.data);
 
-    const produto = apiResponse.data[0];
+    const produto = Array.isArray(apiResponse.data) ? apiResponse.data[0] : null;
 
-    if (!produto) {
-      console.log("❌ Produto não encontrado com slug:", slug);
+    if (!produto || typeof produto !== 'object') {
+      console.log("❌ Produto não extraído corretamente:", apiResponse.data);
       return res.json({
         resposta: '',
         complemento: 'Produto não encontrado via API Bagy.'
