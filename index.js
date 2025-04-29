@@ -1,4 +1,4 @@
-// index.js atualizado com tratamento de erro robusto para API Bagy
+// index.js atualizado — corrigido para buscar produtos por SLUG, não por name
 
 import express from 'express';
 import cors from 'cors';
@@ -29,7 +29,8 @@ app.post('/chat', async (req, res) => {
     const urlObj = new URL(url);
     const slug = urlObj.pathname.replace(/^\//, '').split('/')[0];
 
-    const produtoResponse = await axios.get(`https://api.dooca.store/products?name=${encodeURIComponent(slug)}`);
+    // USAR SLUG EM VEZ DE NAME NA CONSULTA:
+    const produtoResponse = await axios.get(`https://api.dooca.store/products?slug=${encodeURIComponent(slug)}`);
     const produto = Array.isArray(produtoResponse.data) ? produtoResponse.data[0] : null;
 
     if (!produto || !produto.name) {
