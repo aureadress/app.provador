@@ -1,3 +1,5 @@
+// index.js atualizado com tratamento de erro robusto para API Bagy
+
 import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
@@ -28,26 +30,38 @@ app.post('/chat', async (req, res) => {
     const slug = urlObj.pathname.replace(/^\//, '').split('/')[0];
 
     const produtoResponse = await axios.get(`https://api.dooca.store/products?name=${encodeURIComponent(slug)}`);
-    const produto = produtoResponse.data[0];
+    const produto = Array.isArray(produtoResponse.data) ? produtoResponse.data[0] : null;
 
-    if (!produto) {
+    if (!produto || !produto.name) {
       return res.json({
         resposta: '',
-        complemento: 'Produto não encontrado na API.'
+        complemento: 'Não foi possível encontrar os dados do produto na API.'
       });
     }
 
     const nomeProduto = produto.name;
     const descricao = produto.description || '';
     const preco = produto.price || '';
-    const cores = produto.variations?.map(v => v.color?.name).filter(Boolean) || [];
+    const cores = Array.isArray(produto.variations)
+      ? produto.variations.map(v => v.color?.name).filter(Boolean)
+      : [];
 
     let tabelaMedidas = [];
-    if (produto.features) {
-      const medidasFeature = produto.features.find(f => f.name.toLowerCase().includes('medidas'));
-      if (medidasFeature && medidasFeature.values.length) {
-        tabelaMedidas = medidasFeature.values.map(v => JSON.parse(v.name));
+    try {
+      if (Array.isArray(produto.features)) {
+        const medidasFeature = produto.features.find(f => f.name.toLowerCase().includes('medidas'));
+        if (medidasFeature && Array.isArray(medidasFeature.values)) {
+          tabelaMedidas = medidasFeature.values.map(v => {
+            try {
+              return JSON.parse(v.name);
+            } catch {
+              return null;
+            }
+          }).filter(Boolean);
+        }
       }
+    } catch (err) {
+      console.warn('Erro ao processar tabela de medidas:', err);
     }
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -81,6 +95,13 @@ REGRAS:
       });
     }
 
+    if (!tabelaMedidas.length) {
+      return res.json({
+        resposta: '',
+        complemento: 'Tabela de medidas não encontrada neste produto.'
+      });
+    }
+
     const promptTamanho = `
 Você é assistente de vendas de moda. Com base nestas medidas da cliente:
 - Busto: ${busto} cm
@@ -108,8 +129,8 @@ Indique apenas o número do tamanho ideal (36–58).
     });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ erro: 'Erro ao processar a requisição' });
+    console.error('Erro geral:', err);
+    res.status(500).json({ resposta: '', complemento: 'Erro interno ao processar as informações.' });
   }
 });
 
