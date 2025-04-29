@@ -24,11 +24,29 @@ app.post('/chat', async (req, res) => {
   try {
     const { busto, cintura, quadril, url, message, nomeLoja } = req.body;
     const urlObj = new URL(url);
-    const slug = urlObj.pathname.replace(/^\//, '').replace(/\?.*$/, '');
 
     const headers = { Authorization: `Bearer ${process.env.BAGY_API_KEY}` };
-    const produtoResponse = await axios.get(`https://api.dooca.store/products?slug=${encodeURIComponent(slug)}`, { headers });
-    const produto = Array.isArray(produtoResponse.data) ? produtoResponse.data[0] : null;
+
+    let produto = null;
+
+    // Verificar se existe variation=ID na URL
+    const searchParams = urlObj.searchParams;
+    const variationId = searchParams.get('variation');
+
+    if (variationId) {
+      // Buscar variation e extrair o product_id
+      const variationResponse = await axios.get(`https://api.dooca.store/variations/${variationId}`, { headers });
+      const productId = variationResponse.data.product_id;
+      if (productId) {
+        const produtoResponse = await axios.get(`https://api.dooca.store/products/${productId}`, { headers });
+        produto = produtoResponse.data;
+      }
+    } else {
+      // Buscar pelo slug como fallback
+      const slug = urlObj.pathname.replace(/^\//, '').replace(/\?.*$/, '');
+      const produtoResponse = await axios.get(`https://api.dooca.store/products?slug=${encodeURIComponent(slug)}`, { headers });
+      produto = Array.isArray(produtoResponse.data) ? produtoResponse.data[0] : null;
+    }
 
     if (!produto || !produto.name) {
       return res.json({ resposta: '', complemento: 'Não foi possível encontrar os dados do produto na API.' });
