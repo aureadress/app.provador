@@ -1,5 +1,3 @@
-// index.js atualizado — corrigido para buscar produtos por SLUG, não por name
-
 import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
@@ -29,40 +27,32 @@ app.post('/chat', async (req, res) => {
     const urlObj = new URL(url);
     const slug = urlObj.pathname.replace(/^\//, '').split('/')[0];
 
-    // USAR SLUG EM VEZ DE NAME NA CONSULTA:
-    const produtoResponse = await axios.get(`https://api.dooca.store/products?slug=${encodeURIComponent(slug)}`);
+    const headers = { Authorization: `Bearer ${process.env.BAGY_API_KEY}` };
+    const produtoResponse = await axios.get(`https://api.dooca.store/products?slug=${encodeURIComponent(slug)}`, { headers });
     const produto = Array.isArray(produtoResponse.data) ? produtoResponse.data[0] : null;
 
     if (!produto || !produto.name) {
-      return res.json({
-        resposta: '',
-        complemento: 'Não foi possível encontrar os dados do produto na API.'
-      });
+      return res.json({ resposta: '', complemento: 'Não foi possível encontrar os dados do produto na API.' });
     }
 
     const nomeProduto = produto.name;
     const descricao = produto.description || '';
-    const preco = produto.price || '';
     const cores = Array.isArray(produto.variations)
       ? produto.variations.map(v => v.color?.name).filter(Boolean)
       : [];
 
     let tabelaMedidas = [];
-    try {
-      if (Array.isArray(produto.features)) {
-        const medidasFeature = produto.features.find(f => f.name.toLowerCase().includes('medidas'));
-        if (medidasFeature && Array.isArray(medidasFeature.values)) {
-          tabelaMedidas = medidasFeature.values.map(v => {
-            try {
-              return JSON.parse(v.name);
-            } catch {
-              return null;
-            }
-          }).filter(Boolean);
-        }
+    if (Array.isArray(produto.features)) {
+      const medidasFeature = produto.features.find(f => f.name.toLowerCase().includes('medidas'));
+      if (medidasFeature && Array.isArray(medidasFeature.values)) {
+        tabelaMedidas = medidasFeature.values.map(v => {
+          try {
+            return JSON.parse(v.name);
+          } catch {
+            return null;
+          }
+        }).filter(Boolean);
       }
-    } catch (err) {
-      console.warn('Erro ao processar tabela de medidas:', err);
     }
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -97,10 +87,7 @@ REGRAS:
     }
 
     if (!tabelaMedidas.length) {
-      return res.json({
-        resposta: '',
-        complemento: 'Tabela de medidas não encontrada neste produto.'
-      });
+      return res.json({ resposta: '', complemento: 'Tabela de medidas não encontrada neste produto.' });
     }
 
     const promptTamanho = `
@@ -124,10 +111,7 @@ Indique apenas o número do tamanho ideal (36–58).
     const cupom = `TAM${tamanhoIdeal}`;
     const complemento = `Você está prestes para arrasar com o <strong>${nomeProduto}</strong> no tamanho <strong>${tamanhoIdeal}</strong>. Para facilitar, liberei um cupom especial:<br><strong>Código do Cupom: ${cupom}</strong> Use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!`;
 
-    return res.json({
-      resposta: tamanhoIdeal,
-      complemento
-    });
+    return res.json({ resposta: tamanhoIdeal, complemento });
 
   } catch (err) {
     console.error('Erro geral:', err);
