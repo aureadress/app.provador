@@ -26,8 +26,9 @@ app.post('/chat', async (req, res) => {
   try {
     const { busto, cintura, quadril, url, message, nomeLoja } = req.body;
 
-    // Extrair slug da URL
-    const slug = url.split('/').filter(Boolean).pop().split('?')[0];
+    // Corrigir extração de slug (pegar penúltimo item da URL)
+    const partes = url.split('/').filter(Boolean);
+    const slug = partes[partes.length - 2];
 
     // Buscar produto pela API da Bagy
     const apiResponse = await axios.get(`https://api.dooca.store/products?slug=${slug}`, {
@@ -35,7 +36,7 @@ app.post('/chat', async (req, res) => {
         Authorization: `Bearer ${process.env.BAGY_API_KEY}`
       }
     });
-    const produto = apiResponse.data[0]; // Assume primeiro resultado
+    const produto = apiResponse.data[0];
 
     if (!produto) {
       return res.json({
@@ -48,7 +49,7 @@ app.post('/chat', async (req, res) => {
     const descricao = produto.description?.replace(/<[^>]+>/g, '') || '';
     const cores = produto.variations?.map(v => v.color?.name).filter(Boolean) || [];
 
-    // Montar tabela de medidas com base nos atributos
+    // Montar tabela de medidas
     const tabelaMedidas = [];
     const tabelaFonte = produto.features?.find(f => f.name.toLowerCase().includes('medida') || f.name.toLowerCase().includes('tamanho'));
 
@@ -67,7 +68,6 @@ app.post('/chat', async (req, res) => {
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    // === FLUXO DE DÚVIDAS ===
     if (message) {
       const promptGeral = `
 Você é um vendedor especialista da loja ${nomeLoja || 'Sua Loja'}.
@@ -97,7 +97,6 @@ REGRAS:
       });
     }
 
-    // === FLUXO DE RECOMENDAÇÃO DE TAMANHO ===
     const promptTamanho = `
 Você é assistente de vendas de moda. Com base nestas medidas da cliente:
 - Busto: ${busto} cm
