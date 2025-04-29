@@ -23,9 +23,8 @@ app.get('/', (req, res) => {
 app.post('/chat', async (req, res) => {
   try {
     const { busto, cintura, quadril, url, message, nomeLoja } = req.body;
-
     const urlObj = new URL(url);
-    const slug = urlObj.pathname.replace(/^\//, '').split('/')[0];
+    const slug = urlObj.pathname.replace(/^\//, '').replace(/\?.*$/, '');
 
     const headers = { Authorization: `Bearer ${process.env.BAGY_API_KEY}` };
     const produtoResponse = await axios.get(`https://api.dooca.store/products?slug=${encodeURIComponent(slug)}`, { headers });
