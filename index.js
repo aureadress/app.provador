@@ -30,7 +30,11 @@ app.post('/chat', async (req, res) => {
     const slug = url.split('/').filter(Boolean).pop().split('?')[0];
 
     // Buscar produto pela API da Bagy
-    const apiResponse = await axios.get(`https://api.dooca.store/products?slug=${slug}`);
+    const apiResponse = await axios.get(`https://api.dooca.store/products?slug=${slug}`, {
+      headers: {
+        Authorization: `Bearer ${process.env.BAGY_API_KEY}`
+      }
+    });
     const produto = apiResponse.data[0]; // Assume primeiro resultado
 
     if (!produto) {
