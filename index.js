@@ -1,4 +1,3 @@
-
 import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
@@ -30,15 +29,21 @@ app.post('/chat', async (req, res) => {
     const partes = url.split('/').filter(Boolean);
     const slug = partes[partes.length - 2];
 
+    console.log("🔎 SLUG EXTRAÍDO:", slug);
+
     // Buscar produto pela API da Bagy
     const apiResponse = await axios.get(`https://api.dooca.store/products?slug=${slug}`, {
       headers: {
         Authorization: `Bearer ${process.env.BAGY_API_KEY}`
       }
     });
+
+    console.log("📦 RESPOSTA COMPLETA DA BAGY:", apiResponse.data);
+
     const produto = apiResponse.data[0];
 
     if (!produto) {
+      console.log("❌ Produto não encontrado com slug:", slug);
       return res.json({
         resposta: '',
         complemento: 'Produto não encontrado via API Bagy.'
@@ -49,7 +54,6 @@ app.post('/chat', async (req, res) => {
     const descricao = produto.description?.replace(/<[^>]+>/g, '') || '';
     const cores = produto.variations?.map(v => v.color?.name).filter(Boolean) || [];
 
-    // Montar tabela de medidas
     const tabelaMedidas = [];
     const tabelaFonte = produto.features?.find(f => f.name.toLowerCase().includes('medida') || f.name.toLowerCase().includes('tamanho'));
 
@@ -59,7 +63,10 @@ app.post('/chat', async (req, res) => {
       });
     }
 
+    console.log("🧩 TABELA DE MEDIDAS EXTRAÍDA:", tabelaMedidas);
+
     if (!tabelaMedidas.length) {
+      console.log("⚠️ Nenhuma tabela de medidas encontrada para:", nomeProduto);
       return res.json({
         resposta: '',
         complemento: 'Não foi possível encontrar a tabela de medidas via API.'
@@ -69,6 +76,9 @@ app.post('/chat', async (req, res) => {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     if (message) {
+      console.log("📥 DÚVIDA RECEBIDA:", message);
+      console.log("📦 Dados recebidos:", { busto, cintura, quadril, url, message, nomeLoja, nomeProduto, descricao, tabelaMedidas, cores });
+
       const promptGeral = `
 Você é um vendedor especialista da loja ${nomeLoja || 'Sua Loja'}.
 Produto: ${nomeProduto}
@@ -77,7 +87,6 @@ Cores: ${cores.join(', ')}
 Tabela de medidas: ${JSON.stringify(tabelaMedidas)}
 
 Dúvida: "${message}"
-
 REGRAS:
 - Sempre responda dúvidas de forma breve e clara.
 - Nunca diga que não sabe, utilize os dados acima.
@@ -118,13 +127,15 @@ Indique apenas o número do tamanho ideal (36–58).
     const cupom = `TAM${tamanhoIdeal}`;
     const complemento = `Você está prestes para arrasar com o <strong>${nomeProduto}</strong> no tamanho <strong>${tamanhoIdeal}</strong>. Para facilitar, liberei um cupom especial:<br><strong>Código do Cupom: ${cupom}</strong> Use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!`;
 
+    console.log("🎯 TAMANHO IDEAL:", tamanhoIdeal);
+
     return res.json({
       resposta: tamanhoIdeal,
       complemento
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("🔥 ERRO NO BACKEND:", err);
     res.status(500).json({ erro: 'Erro ao processar a requisição' });
   }
 });
