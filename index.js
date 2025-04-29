@@ -1,7 +1,7 @@
+
 import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
-import * as cheerio from 'cheerio';
 import dotenv from 'dotenv';
 import { OpenAI } from 'openai';
 import path from 'path';
@@ -12,13 +12,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Servir arquivos estáticos (a pasta onde estão index.html e widget.js)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname);
 app.use(express.static(rootDir));
 
-// Rota principal: serve o widget
+// Rota principal
 app.get('/', (req, res) => {
   res.sendFile(path.join(rootDir, 'index.html'));
 });
@@ -26,64 +25,47 @@ app.get('/', (req, res) => {
 app.post('/chat', async (req, res) => {
   try {
     const { busto, cintura, quadril, url, message, nomeLoja } = req.body;
-    const response = await axios.get(url);
-    const $ = cheerio.load(response.data);
 
-    // Extrai nome e descrição do produto
-    const nomeProduto = $('.product-info-content h1').first().text().trim();
-    const descricao = $('#product-description').text().trim();
+    // Extrair slug da URL
+    const slug = url.split('/').filter(Boolean).pop().split('?')[0];
 
-    // Monta tabela de medidas (versão inteligente)
-    let tabelaMedidas = [];
-    $('table').each((_, tabela) => {
-      let headers = [];
-      let foundHeader = false;
-      $(tabela).find('tr').each((i, row) => {
-        const cells = $(row).find('td, th');
-        const cellTexts = cells.map((_, cell) => $(cell).text().trim().toLowerCase()).get();
+    // Buscar produto pela API da Bagy
+    const apiResponse = await axios.get(`https://api.dooca.store/products?slug=${slug}`);
+    const produto = apiResponse.data[0]; // Assume primeiro resultado
 
-        // Identifica a linha do cabeçalho
-        if (!foundHeader && cellTexts.includes('busto') && cellTexts.includes('cintura')) {
-          headers = cellTexts;
-          foundHeader = true;
-          return;
-        }
-
-        // Só processa linhas após o cabeçalho
-        if (foundHeader && cells.length === headers.length) {
-          const values = {};
-          cells.each((j, cell) => {
-            const key = headers[j];
-            if (key) values[key] = $(cell).text().trim();
-          });
-          if (values['busto'] && values['cintura']) tabelaMedidas.push(values);
-        }
-      });
-    });
-
-    // Se não houver tabela, retorna erro amigável
-    if (!tabelaMedidas.length) {
+    if (!produto) {
       return res.json({
         resposta: '',
-        complemento: 'Não consigo fornecer uma recomendação de tamanho sem a tabela de medidas.'
+        complemento: 'Produto não encontrado via API Bagy.'
       });
     }
 
-    // Extrai cores disponíveis
-    const cores = $('.variant-item').map((_, el) => $(el).text().trim()).get();
+    const nomeProduto = produto.name || '';
+    const descricao = produto.description?.replace(/<[^>]+>/g, '') || '';
+    const cores = produto.variations?.map(v => v.color?.name).filter(Boolean) || [];
+
+    // Montar tabela de medidas com base nos atributos
+    const tabelaMedidas = [];
+    const tabelaFonte = produto.features?.find(f => f.name.toLowerCase().includes('medida') || f.name.toLowerCase().includes('tamanho'));
+
+    if (tabelaFonte?.values?.length) {
+      tabelaFonte.values.forEach(v => {
+        tabelaMedidas.push({ medida: v.name });
+      });
+    }
+
+    if (!tabelaMedidas.length) {
+      return res.json({
+        resposta: '',
+        complemento: 'Não foi possível encontrar a tabela de medidas via API.'
+      });
+    }
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     // === FLUXO DE DÚVIDAS ===
     if (message) {
-      try {
-        // LOG de todos os dados recebidos e extraídos
-        console.log({
-          busto, cintura, quadril, url, message, nomeLoja,
-          nomeProduto, descricao, tabelaMedidas, cores
-        });
-
-        const promptGeral = `
+      const promptGeral = `
 Você é um vendedor especialista da loja ${nomeLoja || 'Sua Loja'}.
 Produto: ${nomeProduto}
 Descrição: ${descricao}
@@ -95,28 +77,20 @@ Dúvida: "${message}"
 REGRAS:
 - Sempre responda dúvidas de forma breve e clara.
 - Nunca diga que não sabe, utilize os dados acima.
-        `;
+      `;
 
-        const atendimento = await openai.chat.completions.create({
-          model: 'gpt-4',
-          messages: [
-            { role: 'system', content: 'Seja breve, objetivo, SEM emojis. Sempre informe o que for perguntado usando os dados acima.' },
-            { role: 'user', content: promptGeral }
-          ]
-        });
+      const atendimento = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [
+          { role: 'system', content: 'Seja breve, objetivo, SEM emojis. Sempre informe o que for perguntado usando os dados acima.' },
+          { role: 'user', content: promptGeral }
+        ]
+      });
 
-        return res.json({
-          resposta: atendimento.choices[0].message.content.trim(),
-          complemento: ''
-        });
-      } catch (err) {
-        // LOG de erro detalhado
-        console.error("Erro no fluxo de dúvidas:", err);
-        return res.json({
-          resposta: "Desculpe, ocorreu um erro ao responder sua dúvida. Tente novamente em instantes.",
-          complemento: ""
-        });
-      }
+      return res.json({
+        resposta: atendimento.choices[0].message.content.trim(),
+        complemento: ''
+      });
     }
 
     // === FLUXO DE RECOMENDAÇÃO DE TAMANHO ===
