@@ -25,17 +25,16 @@ app.post('/chat', async (req, res) => {
   try {
     const { busto, cintura, quadril, url, message, nomeLoja } = req.body;
 
-    // Slug seguro: apenas a primeira parte da URL após o domínio
     const slug = new URL(url).pathname.split('/').filter(Boolean)[0];
     console.log("🔎 SLUG EXTRAÍDO:", slug);
 
-    const apiResponse = await axios.get(`https://api.dooca.store/products/slug/${slug}`, {
+    const apiResponse = await axios.get(`https://api.dooca.store/products?slug=${slug}`, {
       headers: {
         Authorization: `Bearer ${process.env.BAGY_API_KEY}`
       }
     });
 
-    const produto = apiResponse.data;
+    const produto = apiResponse.data.find(p => p.slug === slug);
 
     if (!produto || typeof produto !== 'object') {
       console.log("❌ Produto não encontrado:", slug);
