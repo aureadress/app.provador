@@ -29,12 +29,6 @@
       if (isProductPage && target && !document.getElementById("btn-provador")) {
         clearInterval(checkInterval);
 
-        // Ajusta espaçamento abaixo dos atributos de tamanho
-        const atributos = document.querySelector(".product-attributes .attribute-values");
-        if (atributos) {
-          atributos.style.marginBottom = "16px";
-        }
-
         const botao = document.createElement("button");
         botao.id = "btn-provador";
         botao.innerText = "DESCUBRA SEU TAMANHO";
@@ -47,6 +41,8 @@
         botao.style.fontSize = "14px";
         botao.style.fontWeight = "bold";
         botao.style.marginTop = "12px";
+        botao.style.marginBottom = "12px";
+        botao.style.display = "inline-block";
 
         botao.onclick = () => {
           const iframe = document.createElement("iframe");
@@ -80,6 +76,14 @@
           document.body.appendChild(iframe);
         };
 
+        // ⛔ Evita sumir ao clicar nos atributos da Bagy
+        const observer = new MutationObserver(() => {
+          if (!document.getElementById("btn-provador")) {
+            target.insertBefore(botao, target.firstChild);
+          }
+        });
+
+        observer.observe(target, { childList: true });
         target.insertBefore(botao, target.firstChild);
       }
     }, 500);
