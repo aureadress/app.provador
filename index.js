@@ -30,8 +30,15 @@ app.post('/chat', async (req, res) => {
     console.log("🔎 SLUG EXTRAÍDO:", slug);
     console.log("🏬 SLUG DA LOJA:", lojaSlug);
 
-    const apiResponse = await axios.get(`https://api.dooca.store/public/products/${slug}?store_slug=${lojaSlug}`);
-    const produto = apiResponse.data && typeof apiResponse.data === 'object' ? apiResponse.data : null;
+    const apiResponse = await axios.get(`https://api.dooca.store/products?slug=${slug}&store_slug=${lojaSlug}`, {
+      headers: {
+        Authorization: `Bearer ${process.env.BAGY_API_KEY}`
+      }
+    });
+
+    const produto = Array.isArray(apiResponse.data) && apiResponse.data.length > 0
+      ? apiResponse.data[0]
+      : null;
 
     if (!produto) {
       console.log("❌ Produto não encontrado ou inválido:", slug);
@@ -46,21 +53,29 @@ app.post('/chat', async (req, res) => {
     const cores = produto.variations?.map(v => v.color?.name).filter(Boolean) || [];
 
     const tabelaMedidas = [];
-    const tabelaFonte = produto.features?.find(f => f.name.toLowerCase().includes('medida') || f.name.toLowerCase().includes('tamanho'));
+
+    // Tenta extrair via features
+    let tabelaFonte = produto.features?.find(f =>
+      f.name.toLowerCase().includes('medida') || f.name.toLowerCase().includes('tamanho')
+    );
 
     if (tabelaFonte?.values?.length) {
       tabelaFonte.values.forEach(v => {
         tabelaMedidas.push({ medida: v.name });
       });
+    } else {
+      // Backup: tenta extrair da descrição se features estiver vazio
+      console.log("⚠️ Features ausente, tentando extrair da descrição...");
+      const tabelaNaDescricao = descricao.split('\n').filter(l => l.match(/\d{2}[\/–\-]?\d{0,2}/));
+      tabelaNaDescricao.forEach(linha => tabelaMedidas.push({ medida: linha.trim() }));
     }
 
     console.log("🧩 TABELA DE MEDIDAS EXTRAÍDA:", tabelaMedidas);
 
     if (!tabelaMedidas.length) {
-      console.log("⚠️ Nenhuma tabela de medidas encontrada para:", nomeProduto);
       return res.json({
         resposta: '',
-        complemento: 'Não foi possível encontrar a tabela de medidas via API.'
+        complemento: 'Não foi possível encontrar a tabela de medidas.'
       });
     }
 
