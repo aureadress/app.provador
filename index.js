@@ -1,3 +1,4 @@
+
 import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
@@ -24,9 +25,8 @@ app.post('/chat', async (req, res) => {
   try {
     const { busto, cintura, quadril, url, message, nomeLoja } = req.body;
 
-    const partes = url.split('/').filter(Boolean);
-    const slug = partes[partes.length - 2];
-
+    // Slug seguro: apenas a primeira parte da URL após o domínio
+    const slug = new URL(url).pathname.split('/').filter(Boolean)[0];
     console.log("🔎 SLUG EXTRAÍDO:", slug);
 
     const apiResponse = await axios.get(`https://api.dooca.store/products/slug/${slug}`, {
