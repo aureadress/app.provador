@@ -29,6 +29,12 @@
       if (isProductPage && target && !document.getElementById("btn-provador")) {
         clearInterval(checkInterval);
 
+        // Ajusta espaçamento abaixo dos atributos de tamanho
+        const atributos = document.querySelector(".product-attributes .attribute-values");
+        if (atributos) {
+          atributos.style.marginBottom = "16px";
+        }
+
         const botao = document.createElement("button");
         botao.id = "btn-provador";
         botao.innerText = "DESCUBRA SEU TAMANHO";
@@ -44,7 +50,6 @@
 
         botao.onclick = () => {
           const iframe = document.createElement("iframe");
-          // Passa nomeLoja via query param (opcional, se backend aceitar)
           iframe.src = "https://app.provadorinteligente.com.br?url=" + encodeURIComponent(window.location.href) + "&loja=" + encodeURIComponent(nomeLoja);
           iframe.style.position = "fixed";
           iframe.style.top = "50%";
