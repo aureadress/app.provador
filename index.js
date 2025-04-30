@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const path = require('path');
 const { JSDOM } = require('jsdom');
 const cheerio = require('cheerio');
+const OpenAI = require('openai');
 
 dotenv.config();
 const app = express();
@@ -90,7 +91,6 @@ app.post('/chat', async (req, res) => {
     const cores = produto.variations?.map(v => v.color?.name).filter(Boolean) || [];
     const tamanhos = produto.variations?.map(v => v.attribute?.name).filter(Boolean) || [];
 
-    const OpenAI = require('openai');
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     if (message) {
@@ -109,7 +109,7 @@ REGRAS:
 - Nunca diga que não sabe, utilize os dados acima.`;
 
       const atendimento = await openai.chat.completions.create({
-        model: 'gpt-4',
+        model: 'gpt-3.5-turbo',
         messages: [
           { role: 'system', content: 'Seja breve, objetivo, SEM emojis. Sempre informe o que for perguntado usando os dados acima.' },
           { role: 'user', content: promptGeral }
@@ -132,7 +132,7 @@ Indique apenas o número do tamanho ideal (36–58).
 `;
 
     const sizeCompletion = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-3.5-turbo',
       messages: [
         { role: 'system', content: 'Responda apenas com o número do tamanho, sem texto extra.' },
         { role: 'user', content: promptTamanho }
