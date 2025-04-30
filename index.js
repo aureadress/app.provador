@@ -4,6 +4,7 @@ const axios = require('axios');
 const dotenv = require('dotenv');
 const path = require('path');
 const { JSDOM } = require('jsdom');
+const cheerio = require('cheerio');
 
 dotenv.config();
 const app = express();
@@ -23,39 +24,28 @@ app.post('/chat', async (req, res) => {
     const { busto, cintura, quadril, url, message } = req.body;
     console.log('➡️ Rota /chat recebeu requisição com dados:', { busto, cintura, quadril, url, message });
 
-    const pathname = new URL(url).pathname;
-    const partes = pathname.split('/').filter(Boolean);
+    const responseHtml = await axios.get(url);
+    const $ = cheerio.load(responseHtml.data);
 
-    let slug = partes.length >= 2 ? `${partes[0]}/${partes[1]}` : partes[0];
+    // 🆔 Extrair ID do produto diretamente do HTML da página
+    const idProduto = (() => {
+      try {
+        const scriptTag = $('script').filter((i, el) => $(el).html().includes('"product"')).first().html();
+        const match = scriptTag.match(/"product":\s*\{\s*"id":(\d+)/);
+        return match ? match[1] : null;
+      } catch (e) {
+        return null;
+      }
+    })();
 
-    let response = await axios.get(`https://api.dooca.store/products?slug=${slug}`, {
+    if (!idProduto) {
+      return res.status(404).json({ erro: 'ID do produto não encontrado no HTML.' });
+    }
+
+    // 🔎 Buscar produto via API oficial
+    const { data: produto } = await axios.get(`https://api.dooca.store/products/${idProduto}`, {
       headers: { Authorization: `Bearer ${process.env.BAGY_API_KEY}` }
     });
-
-    if (!response.data.length && partes.length >= 1) {
-      slug = partes[0];
-      response = await axios.get(`https://api.dooca.store/products?slug=${slug}`, {
-        headers: { Authorization: `Bearer ${process.env.BAGY_API_KEY}` }
-      });
-
-      if (!response.data.length) {
-        const nomeTratado = decodeURIComponent(partes[0]).replace(/-/g, ' ');
-        response = await axios.get(`https://api.dooca.store/products?name=${encodeURIComponent(nomeTratado)}`, {
-          headers: { Authorization: `Bearer ${process.env.BAGY_API_KEY}` }
-        });
-      }
-    }
-
-    let produto = response.data[0];
-
-    // Fallback final: buscar por ID se não encontrou mas há variações
-    if (!produto && response.data[0]?.variations?.[0]?.product_id) {
-      const id = response.data[0].variations[0].product_id;
-      const resById = await axios.get(`https://api.dooca.store/products/${id}`, {
-        headers: { Authorization: `Bearer ${process.env.BAGY_API_KEY}` }
-      });
-      produto = resById.data;
-    }
 
     if (!produto) return res.status(404).json({ erro: 'Produto não encontrado.' });
 
@@ -64,8 +54,8 @@ app.post('/chat', async (req, res) => {
 
     const dom = new JSDOM(descricao);
     const doc = dom.window.document;
-
     let tabelaMedidas = [];
+
     doc.querySelectorAll('table').forEach(tabela => {
       const rows = Array.from(tabela.querySelectorAll('tr'));
       let headers = [];
@@ -118,8 +108,7 @@ Dúvida: "${message}"
 
 REGRAS:
 - Sempre responda dúvidas de forma breve e clara.
-- Nunca diga que não sabe, utilize os dados acima.
-      `;
+- Nunca diga que não sabe, utilize os dados acima.`;
 
       const atendimento = await openai.chat.completions.create({
         model: 'gpt-4',
@@ -156,10 +145,7 @@ Indique apenas o número do tamanho ideal (36–58).
     const cupom = `TAM${tamanhoIdeal}`;
     const complemento = `Você está prestes para arrasar com o <strong>${nomeProduto}</strong> no tamanho <strong>${tamanhoIdeal}</strong>. Para facilitar, liberei um cupom especial:<br><strong>Código do Cupom: ${cupom}</strong> Use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!`;
 
-    return res.json({
-      resposta: tamanhoIdeal,
-      complemento
-    });
+    return res.json({ resposta: tamanhoIdeal, complemento });
 
   } catch (err) {
     console.error('❌ Erro ao processar /chat:', err);
@@ -169,4 +155,3 @@ Indique apenas o número do tamanho ideal (36–58).
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`✅ Servidor rodando na porta ${PORT}`));
-
