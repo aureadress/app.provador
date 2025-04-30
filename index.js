@@ -3,7 +3,6 @@ const cors = require('cors');
 const axios = require('axios');
 const dotenv = require('dotenv');
 const path = require('path');
-const { fileURLToPath } = require('url');
 const { JSDOM } = require('jsdom');
 
 dotenv.config();
@@ -11,9 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const __filename = fileURLToPath(import.meta.url || __filename); // compatível com CommonJS
-const __dirname = path.dirname(__filename);
-const rootDir = path.resolve(__dirname);
+const rootDir = __dirname;
 app.use(express.static(rootDir));
 
 app.get('/', (req, res) => {
