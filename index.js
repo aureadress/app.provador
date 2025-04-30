@@ -23,15 +23,30 @@ app.post('/chat', async (req, res) => {
     const { busto, cintura, quadril, url, message } = req.body;
     console.log('➡️ Rota /chat recebeu requisição com dados:', { busto, cintura, quadril, url, message });
 
-    const slug = new URL(url).pathname.split('/').filter(Boolean)[0];
+    const pathname = new URL(url).pathname;
+    const partes = pathname.split('/').filter(Boolean);
 
-    const { data } = await axios.get(`https://api.dooca.store/products?slug=${slug}`, {
-      headers: {
-        Authorization: `Bearer ${process.env.BAGY_API_KEY}`
-      }
+    let slug = partes.length >= 2 ? `${partes[0]}/${partes[1]}` : partes[0];
+
+    let response = await axios.get(`https://api.dooca.store/products?slug=${slug}`, {
+      headers: { Authorization: `Bearer ${process.env.BAGY_API_KEY}` }
     });
 
-    const produto = data[0];
+    if (!response.data.length && partes.length >= 1) {
+      slug = partes[0];
+      response = await axios.get(`https://api.dooca.store/products?slug=${slug}`, {
+        headers: { Authorization: `Bearer ${process.env.BAGY_API_KEY}` }
+      });
+
+      if (!response.data.length) {
+        const nomeTratado = decodeURIComponent(partes[0]).replace(/-/g, ' ');
+        response = await axios.get(`https://api.dooca.store/products?name=${encodeURIComponent(nomeTratado)}`, {
+          headers: { Authorization: `Bearer ${process.env.BAGY_API_KEY}` }
+        });
+      }
+    }
+
+    const produto = response.data[0];
     if (!produto) return res.status(404).json({ erro: 'Produto não encontrado.' });
 
     const nomeProduto = produto.name;
