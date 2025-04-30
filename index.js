@@ -1,4 +1,3 @@
-
 import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
@@ -34,10 +33,13 @@ app.post('/chat', async (req, res) => {
       }
     });
 
-    const produto = apiResponse.data.find(p => p.slug === slug);
+    // Corrigir: garantir que o retorno é array antes de aplicar .find
+    const produto = Array.isArray(apiResponse.data)
+      ? apiResponse.data.find(p => p.slug === slug)
+      : null;
 
     if (!produto || typeof produto !== 'object') {
-      console.log("❌ Produto não encontrado:", slug);
+      console.log("❌ Produto não encontrado ou inválido:", slug);
       return res.json({
         resposta: '',
         complemento: 'Produto não encontrado via API Bagy.'
