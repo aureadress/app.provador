@@ -27,19 +27,21 @@ app.post('/chat', async (req, res) => {
     const responseHtml = await axios.get(url);
     const $ = cheerio.load(responseHtml.data);
 
-    // 🆔 Extrair ID do produto diretamente do HTML da página
-    const scriptTag = $('script').filter((i, el) => $(el).html().includes('"product"')).first().html();
+    const scriptTag = $('script').filter((i, el) => $(el).html().includes('product')).first().html();
     const match = scriptTag && scriptTag.match(/"id":\s*(\d+),\s*"name":/);
     const idProduto = match ? match[1] : null;
+
+    console.log('🔍 ID do produto extraído do HTML:', idProduto);
 
     if (!idProduto) {
       return res.status(404).json({ erro: 'ID do produto não encontrado no HTML.' });
     }
 
-    // 🔎 Buscar produto via API oficial
     const { data: produto } = await axios.get(`https://api.dooca.store/products/${idProduto}`, {
       headers: { Authorization: `Bearer ${process.env.BAGY_API_KEY}` }
     });
+
+    console.log('📦 Produto retornado da API:', produto?.name || 'Nada');
 
     if (!produto) return res.status(404).json({ erro: 'Produto não encontrado.' });
 
@@ -75,6 +77,8 @@ app.post('/chat', async (req, res) => {
         }
       });
     });
+
+    console.log('📏 Tabela de medidas extraída:', tabelaMedidas);
 
     if (!tabelaMedidas.length) {
       return res.json({
