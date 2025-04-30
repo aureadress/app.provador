@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { OpenAI } from 'openai';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { JSDOM } from 'jsdom';
 
 dotenv.config();
 const app = express();
@@ -22,82 +23,74 @@ app.get('/', (req, res) => {
 
 app.post('/chat', async (req, res) => {
   try {
-    const { busto, cintura, quadril, url, message, nomeLoja } = req.body;
+    const { busto, cintura, quadril, url, message } = req.body;
+    const slug = new URL(url).pathname.split('/').filter(Boolean)[0];
 
-    let slug = new URL(url).pathname.split('/').filter(Boolean)[0];
-    if (slug.includes('/')) slug = slug.split('/')[0];
-
-    const lojaSlug = nomeLoja?.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') || 'exclusive-dress';
-
-    // LOG de variáveis importantes
-    console.log("🔎 URL recebida:", url);
-    console.log("🔎 SLUG EXTRAÍDO:", slug);
-    console.log("🏬 SLUG DA LOJA:", lojaSlug);
-    console.log("🔐 BAGY_API_KEY:", process.env.BAGY_API_KEY);
-
-    const apiResponse = await axios.get(`https://api.dooca.store/products?slug=${slug}&store_slug=${lojaSlug}`, {
+    const { data } = await axios.get(`https://api.dooca.store/products?slug=${slug}`, {
       headers: {
         Authorization: `Bearer ${process.env.BAGY_API_KEY}`
       }
     });
 
-    const produto = Array.isArray(apiResponse.data) && apiResponse.data.length > 0
-      ? apiResponse.data[0]
-      : null;
+    const produto = data[0];
+    if (!produto) return res.status(404).json({ erro: 'Produto não encontrado.' });
 
-    if (!produto) {
-      console.log("❌ Produto não encontrado ou inválido:", slug);
-      return res.json({
-        resposta: '',
-        complemento: 'Produto não encontrado via API Bagy.'
+    const nomeProduto = produto.name;
+    const descricao = produto.description || '';
+
+    const dom = new JSDOM(descricao);
+    const doc = dom.window.document;
+
+    let tabelaMedidas = [];
+    doc.querySelectorAll('table').forEach(tabela => {
+      const rows = Array.from(tabela.querySelectorAll('tr'));
+      let headers = [];
+      let encontrouCabecalho = false;
+
+      rows.forEach((row, i) => {
+        const cells = Array.from(row.querySelectorAll('td, th')).map(cell => cell.textContent.trim().toLowerCase());
+
+        if (!encontrouCabecalho && cells.includes('busto') && cells.includes('cintura')) {
+          headers = cells;
+          encontrouCabecalho = true;
+          return;
+        }
+
+        if (encontrouCabecalho && cells.length === headers.length) {
+          const item = {};
+          cells.forEach((valor, idx) => {
+            item[headers[idx]] = valor;
+          });
+          if (item['busto'] && item['cintura']) {
+            tabelaMedidas.push(item);
+          }
+        }
       });
-    }
-
-    const nomeProduto = produto.name || '';
-    const descricao = produto.description?.replace(/<[^>]+>/g, '') || '';
-    const cores = produto.variations?.map(v => v.color?.name).filter(Boolean) || [];
-
-    const tabelaMedidas = [];
-
-    // Tenta extrair via features
-    let tabelaFonte = produto.features?.find(f =>
-      f.name.toLowerCase().includes('medida') || f.name.toLowerCase().includes('tamanho')
-    );
-
-    if (tabelaFonte?.values?.length) {
-      tabelaFonte.values.forEach(v => {
-        tabelaMedidas.push({ medida: v.name });
-      });
-    } else {
-      // Backup: tenta extrair da descrição se features estiver vazio
-      console.log("⚠️ Features ausente, tentando extrair da descrição...");
-      const tabelaNaDescricao = descricao.split('\n').filter(l => l.match(/\d{2}[\/–\-]?\d{0,2}/));
-      tabelaNaDescricao.forEach(linha => tabelaMedidas.push({ medida: linha.trim() }));
-    }
-
-    console.log("🧩 TABELA DE MEDIDAS EXTRAÍDA:", tabelaMedidas);
-    console.log("📦 PRODUTO BRUTO:", JSON.stringify(produto, null, 2));
+    });
 
     if (!tabelaMedidas.length) {
       return res.json({
         resposta: '',
-        complemento: 'Não foi possível encontrar a tabela de medidas.'
+        complemento: 'Não conseguimos encontrar a tabela de medidas na descrição do produto.'
       });
     }
+
+    const cores = produto.variations?.map(v => v.color?.name).filter(Boolean) || [];
+    const tamanhos = produto.variations?.map(v => v.attribute?.name).filter(Boolean) || [];
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     if (message) {
-      console.log("📥 DÚVIDA RECEBIDA:", message);
-
       const promptGeral = `
-Você é um vendedor especialista da loja ${nomeLoja || 'Sua Loja'}.
+Você é um vendedor especialista da loja Aurea Dress.
 Produto: ${nomeProduto}
-Descrição: ${descricao}
+Descrição: ${descricao.replace(/<[^>]*>/g, '')}
 Cores: ${cores.join(', ')}
+Tamanhos: ${tamanhos.join(', ')}
 Tabela de medidas: ${JSON.stringify(tabelaMedidas)}
 
 Dúvida: "${message}"
+
 REGRAS:
 - Sempre responda dúvidas de forma breve e clara.
 - Nunca diga que não sabe, utilize os dados acima.
@@ -138,15 +131,13 @@ Indique apenas o número do tamanho ideal (36–58).
     const cupom = `TAM${tamanhoIdeal}`;
     const complemento = `Você está prestes para arrasar com o <strong>${nomeProduto}</strong> no tamanho <strong>${tamanhoIdeal}</strong>. Para facilitar, liberei um cupom especial:<br><strong>Código do Cupom: ${cupom}</strong> Use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!`;
 
-    console.log("🎯 TAMANHO IDEAL:", tamanhoIdeal);
-
     return res.json({
       resposta: tamanhoIdeal,
       complemento
     });
 
   } catch (err) {
-    console.error("🔥 ERRO NO BACKEND:", err);
+    console.error(err);
     res.status(500).json({ erro: 'Erro ao processar a requisição' });
   }
 });
