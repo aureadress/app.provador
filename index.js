@@ -1,29 +1,31 @@
-import express from 'express';
-import cors from 'cors';
-import axios from 'axios';
-import dotenv from 'dotenv';
-import { OpenAI } from 'openai';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { JSDOM } from 'jsdom';
+const express = require('express');
+const cors = require('cors');
+const axios = require('axios');
+const dotenv = require('dotenv');
+const path = require('path');
+const { fileURLToPath } = require('url');
+const { JSDOM } = require('jsdom');
 
 dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const __filename = fileURLToPath(import.meta.url);
+const __filename = fileURLToPath(import.meta.url || __filename); // compatível com CommonJS
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname);
 app.use(express.static(rootDir));
 
 app.get('/', (req, res) => {
+  console.log('➡️ Rota principal acessada');
   res.sendFile(path.join(rootDir, 'index.html'));
 });
 
 app.post('/chat', async (req, res) => {
   try {
     const { busto, cintura, quadril, url, message } = req.body;
+    console.log('➡️ Rota /chat recebeu requisição com dados:', { busto, cintura, quadril, url, message });
+
     const slug = new URL(url).pathname.split('/').filter(Boolean)[0];
 
     const { data } = await axios.get(`https://api.dooca.store/products?slug=${slug}`, {
@@ -47,7 +49,7 @@ app.post('/chat', async (req, res) => {
       let headers = [];
       let encontrouCabecalho = false;
 
-      rows.forEach((row, i) => {
+      rows.forEach((row) => {
         const cells = Array.from(row.querySelectorAll('td, th')).map(cell => cell.textContent.trim().toLowerCase());
 
         if (!encontrouCabecalho && cells.includes('busto') && cells.includes('cintura')) {
@@ -78,6 +80,7 @@ app.post('/chat', async (req, res) => {
     const cores = produto.variations?.map(v => v.color?.name).filter(Boolean) || [];
     const tamanhos = produto.variations?.map(v => v.attribute?.name).filter(Boolean) || [];
 
+    const OpenAI = require('openai');
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     if (message) {
@@ -137,10 +140,10 @@ Indique apenas o número do tamanho ideal (36–58).
     });
 
   } catch (err) {
-    console.error(err);
+    console.error('❌ Erro ao processar /chat:', err);
     res.status(500).json({ erro: 'Erro ao processar a requisição' });
   }
 });
 
 const PORT = process.env.PORT;
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Servidor rodando na porta ${PORT}`));
