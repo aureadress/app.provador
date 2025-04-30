@@ -28,15 +28,9 @@ app.post('/chat', async (req, res) => {
     const $ = cheerio.load(responseHtml.data);
 
     // 🆔 Extrair ID do produto diretamente do HTML da página
-    const idProduto = (() => {
-      try {
-        const scriptTag = $('script').filter((i, el) => $(el).html().includes('"product"')).first().html();
-        const match = scriptTag.match(/"product":\s*\{\s*"id":(\d+)/);
-        return match ? match[1] : null;
-      } catch (e) {
-        return null;
-      }
-    })();
+    const scriptTag = $('script').filter((i, el) => $(el).html().includes('"product"')).first().html();
+    const match = scriptTag && scriptTag.match(/"id":\s*(\d+),\s*"name":/);
+    const idProduto = match ? match[1] : null;
 
     if (!idProduto) {
       return res.status(404).json({ erro: 'ID do produto não encontrado no HTML.' });
