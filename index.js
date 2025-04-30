@@ -25,20 +25,15 @@ app.post('/chat', async (req, res) => {
     const { busto, cintura, quadril, url, message, nomeLoja } = req.body;
 
     const slug = new URL(url).pathname.split('/').filter(Boolean)[0];
+    const lojaSlug = nomeLoja?.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') || 'exclusive-dress';
+
     console.log("🔎 SLUG EXTRAÍDO:", slug);
+    console.log("🏬 SLUG DA LOJA:", lojaSlug);
 
-    const apiResponse = await axios.get(`https://api.dooca.store/products?slug=${slug}`, {
-      headers: {
-        Authorization: `Bearer ${process.env.BAGY_API_KEY}`
-      }
-    });
+    const apiResponse = await axios.get(`https://api.dooca.store/public/products/${slug}?store_slug=${lojaSlug}`);
+    const produto = apiResponse.data && typeof apiResponse.data === 'object' ? apiResponse.data : null;
 
-    // Corrigir: garantir que o retorno é array antes de aplicar .find
-    const produto = Array.isArray(apiResponse.data)
-      ? apiResponse.data.find(p => p.slug === slug)
-      : null;
-
-    if (!produto || typeof produto !== 'object') {
+    if (!produto) {
       console.log("❌ Produto não encontrado ou inválido:", slug);
       return res.json({
         resposta: '',
