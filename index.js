@@ -24,11 +24,16 @@ app.post('/chat', async (req, res) => {
   try {
     const { busto, cintura, quadril, url, message, nomeLoja } = req.body;
 
-    const slug = new URL(url).pathname.split('/').filter(Boolean)[0];
+    let slug = new URL(url).pathname.split('/').filter(Boolean)[0];
+    if (slug.includes('/')) slug = slug.split('/')[0];
+
     const lojaSlug = nomeLoja?.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') || 'exclusive-dress';
 
+    // LOG de variáveis importantes
+    console.log("🔎 URL recebida:", url);
     console.log("🔎 SLUG EXTRAÍDO:", slug);
     console.log("🏬 SLUG DA LOJA:", lojaSlug);
+    console.log("🔐 BAGY_API_KEY:", process.env.BAGY_API_KEY);
 
     const apiResponse = await axios.get(`https://api.dooca.store/products?slug=${slug}&store_slug=${lojaSlug}`, {
       headers: {
@@ -71,6 +76,7 @@ app.post('/chat', async (req, res) => {
     }
 
     console.log("🧩 TABELA DE MEDIDAS EXTRAÍDA:", tabelaMedidas);
+    console.log("📦 PRODUTO BRUTO:", JSON.stringify(produto, null, 2));
 
     if (!tabelaMedidas.length) {
       return res.json({
@@ -83,7 +89,6 @@ app.post('/chat', async (req, res) => {
 
     if (message) {
       console.log("📥 DÚVIDA RECEBIDA:", message);
-      console.log("📦 Dados recebidos:", { busto, cintura, quadril, url, message, nomeLoja, nomeProduto, descricao, tabelaMedidas, cores });
 
       const promptGeral = `
 Você é um vendedor especialista da loja ${nomeLoja || 'Sua Loja'}.
