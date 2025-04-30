@@ -29,18 +29,16 @@ app.post('/chat', async (req, res) => {
 
     console.log("🔎 SLUG EXTRAÍDO:", slug);
 
-    const apiResponse = await axios.get(`https://api.dooca.store/products?slug=${slug}`, {
+    const apiResponse = await axios.get(`https://api.dooca.store/products/slug/${slug}`, {
       headers: {
         Authorization: `Bearer ${process.env.BAGY_API_KEY}`
       }
     });
 
-    console.log("📦 RESPOSTA COMPLETA DA BAGY:", apiResponse.data);
-
-    const produto = Array.isArray(apiResponse.data) ? apiResponse.data[0] : null;
+    const produto = apiResponse.data;
 
     if (!produto || typeof produto !== 'object') {
-      console.log("❌ Produto não extraído corretamente:", apiResponse.data);
+      console.log("❌ Produto não encontrado:", slug);
       return res.json({
         resposta: '',
         complemento: 'Produto não encontrado via API Bagy.'
