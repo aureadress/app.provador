@@ -1,3 +1,4 @@
+// index.js reestruturado com proteções e melhorias
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
@@ -20,31 +21,41 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(rootDir, 'index.html'));
 });
 
-app.post('/chat', async (req, res) => {
+// Função auxiliar para limpar URL
+const limparURL = (url) => url?.replace(/;$/, '').trim();
+
+// Função auxiliar para extrair ID do HTML do produto
+async function extrairIdProduto(url) {
   try {
-    const { busto, cintura, quadril, url, message } = req.body;
-    console.log('➡️ Rota /chat recebeu requisição com dados:', { busto, cintura, quadril, url, message });
-
-    const responseHtml = await axios.get(url);
+    const responseHtml = await axios.get(limparURL(url), {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
     const $ = cheerio.load(responseHtml.data);
-
     const scriptTag = $('script').filter((i, el) => $(el).html().includes('product')).first().html();
     const match = scriptTag && scriptTag.match(/"id":\s*(\d+),\s*"name":/);
-    const idProduto = match ? match[1] : null;
+    return match ? match[1] : null;
+  } catch (err) {
+    console.error('Erro ao extrair ID do produto:', err.message);
+    return null;
+  }
+}
 
-    console.log('🔍 ID do produto extraído do HTML:', idProduto);
+app.post('/chat', async (req, res) => {
+  try {
+    const { busto, cintura, quadril, url, idProduto, message } = req.body;
+    console.log('➡️ Rota /chat recebeu requisição com dados:', { busto, cintura, quadril, url, idProduto, message });
 
-    if (!idProduto) {
-      return res.status(404).json({ erro: 'ID do produto não encontrado no HTML.' });
-    }
+    let produtoId = idProduto;
+    if (!produtoId && url) produtoId = await extrairIdProduto(url);
+    if (!produtoId) return res.status(404).json({ erro: 'ID do produto não encontrado.' });
 
-    const { data: produto } = await axios.get(`https://api.dooca.store/products/${idProduto}`, {
+    const { data: produto } = await axios.get(`https://api.dooca.store/products/${produtoId}`, {
       headers: { Authorization: `Bearer ${process.env.BAGY_API_KEY}` }
     });
 
-    console.log('📦 Produto retornado da API:', produto?.name || 'Nada');
-
-    if (!produto) return res.status(404).json({ erro: 'Produto não encontrado.' });
+    if (!produto) return res.status(404).json({ erro: 'Produto não encontrado na API.' });
 
     const nomeProduto = produto.name;
     const descricao = produto.description || '';
@@ -72,20 +83,13 @@ app.post('/chat', async (req, res) => {
           cells.forEach((valor, idx) => {
             item[headers[idx]] = valor;
           });
-          if (item['busto'] && item['cintura']) {
-            tabelaMedidas.push(item);
-          }
+          if (item['busto'] && item['cintura']) tabelaMedidas.push(item);
         }
       });
     });
 
-    console.log('📏 Tabela de medidas extraída:', tabelaMedidas);
-
     if (!tabelaMedidas.length) {
-      return res.json({
-        resposta: '',
-        complemento: 'Não conseguimos encontrar a tabela de medidas na descrição do produto.'
-      });
+      return res.json({ resposta: '', complemento: 'Não conseguimos encontrar a tabela de medidas na descrição do produto.' });
     }
 
     const cores = produto.variations?.map(v => v.color?.name).filter(Boolean) || [];
@@ -116,20 +120,16 @@ REGRAS:
         ]
       });
 
-      return res.json({
-        resposta: atendimento.choices[0].message.content.trim(),
-        complemento: ''
-      });
+      return res.json({ resposta: atendimento.choices[0].message.content.trim(), complemento: '' });
     }
 
-    const promptTamanho = `
-Você é assistente de vendas de moda. Com base nestas medidas da cliente:
-- Busto: ${busto} cm
-- Cintura: ${cintura} cm
-- Quadril: ${quadril} cm
-E na tabela de medidas JSON: ${JSON.stringify(tabelaMedidas)}
-Indique apenas o número do tamanho ideal (36–58).
-`;
+    const promptTamanho = `Com base nas medidas:
+Busto: ${busto} cm
+Cintura: ${cintura} cm
+Quadril: ${quadril} cm
+E na tabela de medidas: ${JSON.stringify(tabelaMedidas)}
+
+Qual o tamanho ideal (responda apenas com o número)?`;
 
     const sizeCompletion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
@@ -141,7 +141,7 @@ Indique apenas o número do tamanho ideal (36–58).
 
     const tamanhoIdeal = sizeCompletion.choices[0].message.content.trim();
     const cupom = `TAM${tamanhoIdeal}`;
-    const complemento = `Você está prestes para arrasar com o <strong>${nomeProduto}</strong> no tamanho <strong>${tamanhoIdeal}</strong>. Para facilitar, liberei um cupom especial:<br><strong>Código do Cupom: ${cupom}</strong> Use na finalização da compra e aproveite o desconto. Corre que é por tempo limitado!`;
+    const complemento = `Você está prestes para arrasar com o <strong>${nomeProduto}</strong> no tamanho <strong>${tamanhoIdeal}</strong>. Para facilitar, liberei um cupom especial:<br><strong>Código do Cupom: ${cupom}</strong> Use na finalização da compra e aproveite o desconto.`;
 
     return res.json({ resposta: tamanhoIdeal, complemento });
 
@@ -151,5 +151,5 @@ Indique apenas o número do tamanho ideal (36–58).
   }
 });
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ Servidor rodando na porta ${PORT}`));
